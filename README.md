@@ -1,0 +1,2 @@
+# StreamingApp
+Collaborative Streaming application
