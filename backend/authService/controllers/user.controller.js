@@ -4,6 +4,8 @@ const jwt = require('../util/jwtAuth')
 var crypto = require("crypto");
 const cookieParser = require('cookie-parser');
 
+const nodemailer = require("nodemailer");
+
 
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
@@ -94,20 +96,67 @@ const forgetPassword = async (req, res) => {
 };
 
 const verificationEmailTrigger = async (req,res) => {
+  //TODO: this needs to be modified based on the type of email carrier we choose
   try{
     const verificationToken = crypto.randomBytes(20).toString('hex');
-
+    let user = await User.findOneAndUpdate({
+      email: req.body.email
+    },
+    {
+      verificationToken: verificationToken,
+      verificationTokenStatus: true
+    })
+    verificationEmail(verificationToken, req.body.email)
+    res.send({msg: "Verification Email Sent"})
   }catch(err){
     res.status(500).send({ msg: "Something went wrong" });
   }
 }
 
-const verificationEmail = async (req,res) => {
+const verificationEmail =  (verificationToken, email) => {
+  try{    
+    const transporter = nodemailer.createTransport({
+      host: "smtp.forwardemail.net",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "prashantdey@mailsire.com",
+        pass: "Prashant123",
+      }
+    });
+    const info =  transporter.sendMail({
+      from: '"Fred Foo 👻" <prashantdey@mailsire.com>', // sender address
+      to: email, // list of receivers
+      subject: "Hello ✔", // Subject line
+      text: `${process.env.HOST}/val/${verificationToken}/${email}`, // plain text body
+      html: "<b>Hello world?</b>", // html body
+    });
+  
+    console.log("Message sent: %s", info.messageId);
+  
+    
+  }catch(err){
+    res.status(500).send({ msg: "Something went wrong" });
+  }
+}
+
+const verificationEmailAfterUserClick = async (req,res) => {
   try{
-
+    emailVerificationTokenFromUrl = req.params['vid']
+    email = req.params['email']
+    let user = User.findOne({email: email, verificationToken: emailVerificationTokenFromUrl, verificationTokenStatus: true})
+    if(user == null){
+      res.send({msg: "Wrong Token"})
+    }else{
+      console.log('Successfully Validated')
+    }
   }catch(err){
     res.status(500).send({ msg: "Something went wrong" });
   }
 }
 
-module.exports = { userRegistration, userLogin, forgetPassword, checkUserLoginStatus, verificationEmailTrigger, verificationEmail };
+const newPasswordAdd = async (req,res) => {
+
+}
+
+module.exports = { userRegistration, userLogin, forgetPassword, checkUserLoginStatus, verificationEmailTrigger, verificationEmail,verificationEmailAfterUserClick, newPasswordAdd };
