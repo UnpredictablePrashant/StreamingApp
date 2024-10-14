@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  streaming-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ravikishans/streamingapp:frontend
+    container_name: streaming-frontend
+    environment:
+      AWS_IP: "0.0.0.0"
+      STREAM_PORT: 3000 #3000
+    ports:
+      - "9099:3000"
+
+  auth-backend:
+    build:
+      context: ./backend/authService
+      dockerfile: Dockerfile
+    image: ravikishans/streamingapp:backend_auth
+    container_name: authentication-backend
+    environment:
+      MONGO_URI: "mongodb+srv://ravikishan:Cluster0@cluster0.y9zohpu.mongodb.net/streemingapp"
+      PORT: 3001
+      JWT_SECRET: "writesomerandomsecrets"
+      AWS_KEY_ID: 'asfdasdfasfasf'
+      AWS_SECRET_KEY: 'adsafsasfdafs'
+      AWS_REGION: 'ap-south-1'
+      AWS_S3_BUCKET: 'streamingappservice'
+    ports:
+      - "3001:3001"
+
+  stream-backend:
+    build:
+      context: ./backend/streamingService
+      dockerfile: Dockerfile
+    image: ravikishans/streamingapp:backend_stream
+    container_name: stream-backend
+    environment:
+      MONGO_URI: "mongodb+srv://ravikishan:Cluster0@cluster0.y9zohpu.mongodb.net/streemingapp"
+      PORT: 3002
+      JWT_SECRET: "writesomerandomsecrets"
+      AWS_KEY_ID: 'asfdasdfasfasf'
+      AWS_SECRET_KEY: 'adsafsasfdafs'
+      AWS_REGION: 'ap-south-1'
+      AWS_S3_BUCKET: 'streamingappservice'
+    ports:
+      - "3002:3002"
