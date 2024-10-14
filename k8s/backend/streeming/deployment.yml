@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stream-backend-deployment
+  labels:
+    app: stream-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stream-backend
+  template:
+    metadata:
+      labels:
+        app: stream-backend
+    spec:
+      containers:
+      - name: stream-backend-container
+        image: ravikishans/streamingapp:backend_stream
+        ports:
+        - containerPort: 3002
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: stream-backend-secrets
+              key: MONGO_URI
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: stream-backend-secrets
+              key: JWT_SECRET
+        - name: AWS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: stream-backend-secrets
+              key: AWS_KEY_ID
+        - name: AWS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stream-backend-secrets
+              key: AWS_SECRET_KEY
+        - name: AWS_REGION
+          value: "ap-south-1"
+        - name: AWS_S3_BUCKET
+          value: "streamingappservice"
