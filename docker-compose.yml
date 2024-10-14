@@ -8,7 +8,7 @@ services:
     container_name: streaming-frontend
     environment:
       AWS_IP: "0.0.0.0"
-      STREAM_PORT: 3000 #3000
+      STREAM_PORT: 3002 #3000
     ports:
       - "9099:3000"
 
