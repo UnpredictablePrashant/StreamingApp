@@ -10,7 +10,7 @@ services:
       AWS_IP: "0.0.0.0"
       STREAM_PORT: 3002 #3000
     ports:
-      - "9099:3000"
+      - "3000:3000"
 
   auth-backend:
     build:
@@ -24,7 +24,7 @@ services:
       JWT_SECRET: "writesomerandomsecrets"
       AWS_KEY_ID: 'asfdasdfasfasf'
       AWS_SECRET_KEY: 'adsafsasfdafs'
-      AWS_REGION: 'ap-south-1'
+      AWS_REGION: 'ap-northeast-2'
       AWS_S3_BUCKET: 'streamingappservice'
     ports:
       - "3001:3001"
@@ -41,7 +41,7 @@ services:
       JWT_SECRET: "writesomerandomsecrets"
       AWS_KEY_ID: 'asfdasdfasfasf'
       AWS_SECRET_KEY: 'adsafsasfdafs'
-      AWS_REGION: 'ap-south-1'
+      AWS_REGION: 'ap-northeast-2'
       AWS_S3_BUCKET: 'streamingappservice'
     ports:
       - "3002:3002"
