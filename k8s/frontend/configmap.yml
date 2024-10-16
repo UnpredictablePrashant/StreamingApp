@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: frontend-config
-data:
-  AWS_IP: "0.0.0.0"
-  STREAM_PORT: "3002"
