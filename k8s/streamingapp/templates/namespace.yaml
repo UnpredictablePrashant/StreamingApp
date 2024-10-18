@@ -1,0 +1,27 @@
+# database
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.database.namespace }}
+
+---
+#auth service
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.auth_service.namespace }}
+
+---
+# streaming service
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.streaming_service.namespace }}
+
+---
+#frontend namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.frontend.namespace }}
+

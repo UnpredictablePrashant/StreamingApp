@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+  namespace: {{ .Values.database.namespace }}
+spec:
+  capacity:
+    storage: {{ .Values.database.spec.capacity.storage }}
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/data/mongo" # You can change this if using a cloud-based volume
