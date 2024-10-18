@@ -1,0 +1,162 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-deployment
+  namespace: {{ .Values.database.namespace }}
+  labels:
+    app: {{ .Values.database.labels.app }}
+spec:
+  replicas: {{ .Values.database.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.database.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.database.labels.app }}
+    spec:
+      containers:
+      - name: {{ .Values.database.spec.containers.name }}
+        image: {{ .Values.database.spec.containers.image }}
+        ports:
+        - containerPort: {{ .Values.database.spec.containers.port.containerPort }}
+        volumeMounts:
+        - name: {{ .Values.database.spec.containers.volumeMounts.name }}
+          mountPath: {{ .Values.database.spec.containers.volumeMounts.mountPath }}
+      volumes:
+      - name: {{ .Values.database.spec.volumes.name }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.database.spec.volumes.persistentVolumeClaim.claimName }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-backend-deployment
+  namespace: {{ .Values.auth_service.namespace }}
+  labels:
+    app: {{ .Values.auth_service.labels.app }}
+spec:
+  replicas: {{ .Values.auth_service.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.auth_service.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.auth_service.labels.app }}
+    spec:
+      containers:
+      - name: {{ .Values.auth_service.spec.containers.name }}
+        image: {{ .Values.auth_service.spec.containers.image }}
+        ports:
+        - containerPort: {{ .Values.auth_service.spec.containers.ports.containerPort }}
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: auth-backend-secrets
+              key: MONGO_URI
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: auth-backend-secrets
+              key: JWT_SECRET
+        - name: AWS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: auth-backend-secrets
+              key: AWS_KEY_ID
+        - name: AWS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: auth-backend-secrets
+              key: AWS_SECRET_KEY
+        - name: AWS_REGION
+          value: {{ .Values.auth_service.spec.containers.env.AWS_REGION }}
+        - name: AWS_S3_BUCKET
+          value: {{ .Values.auth_service.spec.containers.env.AWS_S3_BUCKET }}
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stream-backend-deployment
+  namespace: {{ .Values.streaming_service.namespace }}
+  labels:
+    app: {{ .Values.streaming_service.labels.app }}
+spec:
+  replicas: {{ .Values.streaming_service.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.streaming_service.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.streaming_service.labels.app }}
+    spec:
+      containers:
+      - name: {{ .Values.streaming_service.spec.containers.name }}
+        image: {{ .Values.streaming_service.spec.containers.image }}
+        ports:
+        - containerPort: {{ .Values.streaming_service.spec.containers.ports.containerPort }}
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: stream-backend-secrets
+              key: MONGO_URI
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: stream-backend-secrets
+              key: JWT_SECRET
+        - name: AWS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: stream-backend-secrets
+              key: AWS_KEY_ID
+        - name: AWS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: stream-backend-secrets
+              key: AWS_SECRET_KEY
+        - name: AWS_REGION
+          value: {{ .Values.streaming_service.spec.containers.env.AWS_REGION }}
+        - name: AWS_S3_BUCKET
+          value: {{ .Values.streaming_service.spec.containers.env.AWS_S3_BUCKET }}
+
+
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-frontend-deployment
+  namespace: {{ .Values.frontend.namespace }}
+  labels:
+    app: {{ .Values.frontend.labels.app }}
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.frontend.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.frontend.labels.app }}
+    spec:
+      containers:
+      - name: {{ .Values.frontend.spec.containers.name }}
+        image: {{ .Values.frontend.spec.containers.image }}
+        ports:
+        - containerPort: {{ .Values.frontend.spec.containers.ports.containerPort }}
+        envFrom:
+        - configMapRef:
+            name: frontend-config
+
