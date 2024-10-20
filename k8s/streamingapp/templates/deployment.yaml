@@ -19,7 +19,7 @@ spec:
       - name: {{ .Values.database.spec.containers.name }}
         image: {{ .Values.database.spec.containers.image }}
         ports:
-        - containerPort: {{ .Values.database.spec.containers.port.containerPort }}
+        - containerPort: {{ .Values.database.spec.containers.ports.containerPort }}
         volumeMounts:
         - name: {{ .Values.database.spec.containers.volumeMounts.name }}
           mountPath: {{ .Values.database.spec.containers.volumeMounts.mountPath }}

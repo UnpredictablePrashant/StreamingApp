@@ -5,4 +5,4 @@ metadata:
   namespace: {{ .Values.frontend.namespace }}
 data:
   AWS_IP: {{ .Values.frontend.data.AWS_IP }}
-  STREAM_PORT: {{ .Values.frontend.data.STREAM_PORT }}
+  STREAM_PORT: {{ .Values.frontend.data.STREAM_PORT | quote }}
