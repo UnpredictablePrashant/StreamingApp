@@ -38,11 +38,11 @@ auth_service:
         containerPort: 3001
       env:
         MONGO_URI: "mongodb+srv://ravikishan:Cluster0@cluster0.y9zohpu.mongodb.net/streemingapp"
-        JWT_SECRET:
-        AWS_KEY_ID:
-        AWS_SECRET_KEY:
-        AWS_REGION: "ap-northeast-2"
-        AWS_S3_BUCKET: "streamingappservice"
+        # JWT_SECRET:
+  # AWS_KEY_ID:
+  # AWS_SECRET_KEY:
+  # AWS_REGION: "ap-northeast-2"
+  # AWS_S3_BUCKET: "streamingappservice"
   ports:
     protocol: TCP
     port: 3001
@@ -62,11 +62,11 @@ streaming_service:
         containerPort: 3002
       env:
         MONGO_URI: "mongodb+srv://ravikishan:Cluster0@cluster0.y9zohpu.mongodb.net/streemingapp"
-        JWT_SECRET:
-        AWS_KEY_ID:
-        AWS_SECRET_KEY:
-        AWS_REGION: "ap-northeast-2"
-        AWS_S3_BUCKET: "streamingappservice"
+        # JWT_SECRET:
+  # AWS_KEY_ID:
+  # AWS_SECRET_KEY:
+  # AWS_REGION: "ap-northeast-2"
+  # AWS_S3_BUCKET: "streamingappservice"
   ports:
     protocol: TCP
     port: 3002
