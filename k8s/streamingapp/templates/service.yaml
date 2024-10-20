@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-svc
+  namespace: {{ .Values.database.namespace }}
+spec:
+  selector:
+    app: {{ .Values.database.labels.app }}
+  ports:
+  - protocol: {{ .Values.database.ports.protocol }}
+    port: {{ .Values.database.ports.port }}
+    targetPort: {{ .Values.database.ports.targetPort }}
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-backend-svc
+  namespace: {{ .Values.auth_service.namespace }}
+spec:
+  selector:
+    app: {{ .Values.auth_service.labels.app }}
+  ports:
+  - protocol: {{ .Values.auth_service.ports.protocol }}
+    port: {{ .Values.auth_service.ports.port }}
+    targetPort: {{ .Values.auth_service.ports.targetPort }}
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: stream-backend-svc
+  namespace: {{ .Values.streaming_service.namespace }}
+spec:
+  selector:
+    app: {{ .Values.streaming_service.labels.app }}
+  ports:
+  - protocol: {{ .Values.streaming_service.ports.protocol }}
+    port: {{ .Values.streaming_service.ports.port }}
+    targetPort: {{ .Values.streaming_service.ports.targetPort }}
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming-frontend-svc
+  namespace: {{ .Values.frontend.namespace }}
+spec:
+  selector:
+    app: {{ .Values.frontend.labels.app }}
+  ports:
+  - protocol: {{ .Values.frontend.ports.protocol }}
+    port: {{ .Values.frontend.ports.port }}
+    targetPort: {{ .Values.frontend.ports.targetPort }}
+  type: ClusterIP
+
+

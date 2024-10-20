@@ -1,0 +1,93 @@
+database:
+  namespace: db
+  labels:
+    app: mongo
+  replicas: 1
+  spec:
+    containers:
+      name: mongo-container
+      image: mongo:latest
+      ports:
+        containerPort: 27017
+      volumeMounts:
+        name: mongo-storage
+        mountPath: /data/db
+    volumes:
+      name: mongo-storage
+      persistentVolumeClaim:
+        claimName: mongo-pvc
+    capacity:
+      storage: 3Gi
+  ports:
+    protocol: TCP
+    port: 27017
+    targetPort: 27017
+
+
+
+auth_service:
+  namespace: beauth
+  labels:
+    app: auth-backend
+  replicas: 1
+  spec:
+    containers:
+      name: auth-backend-container
+      image: ravikishans/streamingapp:backend_auth
+      ports:
+        containerPort: 3001
+      env:
+        MONGO_URI: "mongodb+srv://ravikishan:Cluster0@cluster0.y9zohpu.mongodb.net/streemingapp"
+        # JWT_SECRET:
+  # AWS_KEY_ID:
+  # AWS_SECRET_KEY:
+  # AWS_REGION: "ap-northeast-2"
+  # AWS_S3_BUCKET: "streamingappservice"
+  ports:
+    protocol: TCP
+    port: 3001
+    targetPort: 3001
+
+
+streaming_service:
+  namespace: bestream
+  labels:
+    app: auth-backend
+  replicas: 1
+  spec:
+    containers:
+      name: stream-backend-container
+      image: ravikishans/streamingapp:backend_stream
+      ports:
+        containerPort: 3002
+      env:
+        MONGO_URI: "mongodb+srv://ravikishan:Cluster0@cluster0.y9zohpu.mongodb.net/streemingapp"
+        # JWT_SECRET:
+  # AWS_KEY_ID:
+  # AWS_SECRET_KEY:
+  # AWS_REGION: "ap-northeast-2"
+  # AWS_S3_BUCKET: "streamingappservice"
+  ports:
+    protocol: TCP
+    port: 3002
+    targetPort: 3002
+
+
+frontend:
+  namespace: frontend
+  labels:
+    app: streaming-frontend
+  replicas: 1
+  spec:
+    containers:
+      name: streaming-frontend-container
+      image: ravikishans/streamingapp:frontend
+      ports:
+        containerPort: 3000
+  ports:
+    protocol: TCP
+    port: 3000
+    targetPort: 3000
+  data:
+    AWS_IP: "0.0.0.0"
+    STREAM_PORT: "3002"
