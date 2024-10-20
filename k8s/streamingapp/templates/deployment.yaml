@@ -58,21 +58,21 @@ spec:
             secretKeyRef:
               name: auth-backend-secrets
               key: MONGO_URI
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: auth-backend-secrets
-              key: JWT_SECRET
-        - name: AWS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: auth-backend-secrets
-              key: AWS_KEY_ID
-        - name: AWS_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: auth-backend-secrets
-              key: AWS_SECRET_KEY
+        # - name: JWT_SECRET
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: auth-backend-secrets
+        #       key: JWT_SECRET
+        # - name: AWS_KEY_ID
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: auth-backend-secrets
+        #       key: AWS_KEY_ID
+        # - name: AWS_SECRET_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: auth-backend-secrets
+        #       key: AWS_SECRET_KEY
         - name: AWS_REGION
           value: {{ .Values.auth_service.spec.containers.env.AWS_REGION }}
         - name: AWS_S3_BUCKET
@@ -109,21 +109,21 @@ spec:
             secretKeyRef:
               name: stream-backend-secrets
               key: MONGO_URI
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: stream-backend-secrets
-              key: JWT_SECRET
-        - name: AWS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: stream-backend-secrets
-              key: AWS_KEY_ID
-        - name: AWS_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: stream-backend-secrets
-              key: AWS_SECRET_KEY
+        # - name: JWT_SECRET
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: stream-backend-secrets
+        #       key: JWT_SECRET
+        # - name: AWS_KEY_ID
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: stream-backend-secrets
+        #       key: AWS_KEY_ID
+        # - name: AWS_SECRET_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: stream-backend-secrets
+        #       key: AWS_SECRET_KEY
         - name: AWS_REGION
           value: {{ .Values.streaming_service.spec.containers.env.AWS_REGION }}
         - name: AWS_S3_BUCKET

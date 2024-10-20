@@ -10,7 +10,7 @@ spec:
   - protocol: {{ .Values.database.ports.protocol }}
     port: {{ .Values.database.ports.port }}
     targetPort: {{ .Values.database.ports.targetPort }}
-  type: LoadBalancer
+  type: ClusterIP
 
 ---
 
@@ -26,7 +26,7 @@ spec:
   - protocol: {{ .Values.auth_service.ports.protocol }}
     port: {{ .Values.auth_service.ports.port }}
     targetPort: {{ .Values.auth_service.ports.targetPort }}
-  type: LoadBalancer
+  type: ClusterIP
 
 ---
 
@@ -42,7 +42,7 @@ spec:
   - protocol: {{ .Values.streaming_service.ports.protocol }}
     port: {{ .Values.streaming_service.ports.port }}
     targetPort: {{ .Values.streaming_service.ports.targetPort }}
-  type: LoadBalancer
+  type: ClusterIP
 
 ---
 
@@ -58,6 +58,6 @@ spec:
   - protocol: {{ .Values.frontend.ports.protocol }}
     port: {{ .Values.frontend.ports.port }}
     targetPort: {{ .Values.frontend.ports.targetPort }}
-  type: LoadBalancer
+  type: ClusterIP
 
 
