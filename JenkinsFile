@@ -2,8 +2,15 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_REGISTRY = 'ravikishans'
-        DOCKER_CREDENTIALS = credentials('ravikishans')
+        AWS_REGION = 'ap-northeast-2'
+        // ECR_REPO_NAME = 'ravicapstm'
+        // DOCKER_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        // DOCKER_CREDENTIALS = credentials('aws-ecr-credentials') // AWS credentials ID in Jenkins
+        ECR_PUBLIC_REPOSITORY = 'public.ecr.aws/f8g8h5d4/ravicapstm'
+        AWS_CREDENTIALS = credentials('aws-credentials') // AWS credentials for CLI access
+        IMAGE_TAG = "${env.BUILD_ID}" // Use Jenkins build ID as tag
+        // DOCKER_REGISTRY = 'ravikishans'
+        // DOCKER_CREDENTIALS = credentials('ravikishans')
 
         BACKEND_AUTH_NAMESPACE = 'beauth'
         BACKEND_STREAM_NAMESPACE = 'bestream'
@@ -11,7 +18,7 @@ pipeline {
         DATABASE_NAMESPACE = 'db'
 
 
-        HELM_RELEASE_NAME = "streamingapp"
+        HELM_RELEASE_NAME = "streamingapp"  
         HELM_CHART_PATH = './k8s/streamingapp'
     }
 
@@ -80,34 +87,45 @@ pipeline {
                 script {
                     sh """
                         docker compose build
-                        docker login -u ${DOCKER_CREDENTIALS_USR} -p ${DOCKER_CREDENTIALS_PSW}
+                    """    
+                }
+            }
+        }
+        stage ('push image to ECR') {
+            steps {
+                script {
+                    sh """
+                        # Authenticate to AWS ECR Public
+                        aws ecr-public get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_PUBLIC_REPOSITORY}
+
+                        # Push Docker images to the public ECR repository
                         docker compose push
                     """    
                 }
             }
         }
 
-        stage ('deploy to kubernates using helm') {
-            steps {
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
-                        sh """
-                            helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
-                        """    
-                }
-            }
-        }
+        // stage ('deploy to kubernates using helm') {
+        //     steps {
+        //         script {
+        //             withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
+        //                 sh """
+        //                     helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
+        //                 """    
+        //         }
+        //     }
+        // }
 
-        stage('verify deployment') {
-            steps {
-                script{
-                    withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
-                        sh "kubectl get pods -n ${BACKEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
-                        sh "kubectl get pods -n ${FRONTEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
-                        sh "kubectl get pods -n ${DATABASE_NAMESPACE} --kubeconfig=$KUBECONFIG"
-                }
-            }
-        }
+        // stage('verify deployment') {
+        //     steps {
+        //         script{
+        //             withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
+        //                 sh "kubectl get pods -n ${BACKEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
+        //                 sh "kubectl get pods -n ${FRONTEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
+        //                 sh "kubectl get pods -n ${DATABASE_NAMESPACE} --kubeconfig=$KUBECONFIG"
+        //         }
+        //     }
+        // }
     }
     post {
         success {
