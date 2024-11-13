@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'ap-northeast-2'
-        ECR_REPO_PREFIX = 'public.ecr.aws/ravicapstm' // Replace with your public ECR repository
+        ECR_REPO_PREFIX = 'public.ecr.aws/f8g8h5d4/ravicapstm' // Replace with your public ECR repository
         IMAGE_TAG = "${env.BUILD_ID}" // Tag images with the Jenkins build ID
         DOCKER_CREDENTIALS = credentials('ravikishans')
 
