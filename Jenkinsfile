@@ -47,22 +47,34 @@ pipeline {
                         # Build Docker images
                         docker compose build
 
-                        # Tag images for ECR
-                        docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}:frontend
-                        docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}:backend_auth
-                        docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}:backend_stream
-
-                        docker compose push ${ECR_REPO_PREFIX}
+                        
                     """
                     }
                 }
             }
         }
 
-// # Push images to ECR
-//                         docker push ${ECR_REPO_PREFIX}:frontend
-//                         docker push ${ECR_REPO_PREFIX}:backend_auth
-//                         docker push ${ECR_REPO_PREFIX}:backend_stream
+        stage('push & tag images') {
+            steps {
+                script{ 
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        # Tag images for ECR
+                        docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}:frontend
+                        docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}:backend_auth
+                        docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}:backend_stream
+
+                        # Push images to ECR
+                        docker push ${ECR_REPO_PREFIX}:frontend
+                        docker push ${ECR_REPO_PREFIX}:backend_auth
+                        docker push ${ECR_REPO_PREFIX}:backend_stream
+                        """
+                    }
+                }
+            }
+        }
 
         stage('Update Helm Chart with ECR Image Tags') {
             steps {
