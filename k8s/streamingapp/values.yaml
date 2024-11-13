@@ -34,7 +34,7 @@ auth_service:
   spec:
     containers:
       name: auth-backend-container
-      image: ravikishans/streamingapp:backend_auth
+      image: public.ecr.aws/f8g8h5d4/ravicapstm:backend_auth
       ports:
         containerPort: 3001
       env:
@@ -58,7 +58,7 @@ streaming_service:
   spec:
     containers:
       name: stream-backend-container
-      image: ravikishans/streamingapp:backend_stream
+      image: public.ecr.aws/f8g8h5d4/ravicapstm:backend_stream
       ports:
         containerPort: 3002
       env:
@@ -81,7 +81,7 @@ frontend:
   spec:
     containers:
       name: streaming-frontend-container
-      image: ravikishans/streamingapp:frontend
+      image: public.ecr.aws/f8g8h5d4/ravicapstm:frontend
       ports:
         containerPort: 3000
   ports:
