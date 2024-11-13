@@ -20,9 +20,45 @@ spec:
         image: {{ .Values.database.spec.containers.image }}
         ports:
         - containerPort: {{ .Values.database.spec.containers.ports.containerPort }}
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: {{.Values.database.spec.containers.env.MONGO_INITDB_ROOT_USERNAME}}
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: {{.Values.database.spec.containers.env.MONGO_INITDB_ROOT_PASSWORD}}
         volumeMounts:
         - name: {{ .Values.database.spec.containers.volumeMounts.name }}
           mountPath: {{ .Values.database.spec.containers.volumeMounts.mountPath }}
+        livenessProbe:
+          tcpSocket:
+            port: 27017
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 27017
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          # failureThreshold: 3
+
+        # livenessProbe:
+        #   exec:
+        #     command:
+        #     - "mongo"
+        #     - "--eval"
+        #     - "db.adminCommand({ ping: 1 })"
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 10
+        #   failureThreshold: 3
+        # readinessProbe:
+        #   exec:
+        #     command:
+        #     - "mongo"
+        #     - "--eval"
+        #     - "db.adminCommand({ ping: 1 })"
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
+        #   failureThreshold: 3  
       volumes:
       - name: {{ .Values.database.spec.volumes.name }}
         persistentVolumeClaim:
