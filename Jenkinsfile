@@ -52,15 +52,17 @@ pipeline {
                         docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}:backend_auth
                         docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}:backend_stream
 
-                        # Push images to ECR
-                        docker push ${ECR_REPO_PREFIX}:frontend
-                        docker push ${ECR_REPO_PREFIX}:backend_auth
-                        docker push ${ECR_REPO_PREFIX}:backend_stream
+                        docker compose push
                     """
                     }
                 }
             }
         }
+
+// # Push images to ECR
+//                         docker push ${ECR_REPO_PREFIX}:frontend
+//                         docker push ${ECR_REPO_PREFIX}:backend_auth
+//                         docker push ${ECR_REPO_PREFIX}:backend_stream
 
         stage('Update Helm Chart with ECR Image Tags') {
             steps {
