@@ -5,6 +5,7 @@ pipeline {
         AWS_REGION = 'ap-northeast-2'
         ECR_REPO_PREFIX = 'public.ecr.aws/ravicapstm' // Replace with your public ECR repository
         IMAGE_TAG = "${env.BUILD_ID}" // Tag images with the Jenkins build ID
+        DOCKER_CREDENTIALS = credentials('ravikishans')
 
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
@@ -36,8 +37,10 @@ pipeline {
         stage('Build and Push Docker Images') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'aws_credentials', variable: 'AKIA6GBMCU7ZEV3BHSTW')])
-                    sh """
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials' // Update with your actual AWS credentials ID in Jenkins
+                    ]]) {
+                        sh """
                         # Authenticate Docker to ECR public
                         aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/f8g8h5d4
 
@@ -54,6 +57,7 @@ pipeline {
                         docker push ${ECR_REPO_PREFIX}/backend_auth:${IMAGE_TAG}
                         docker push ${ECR_REPO_PREFIX}/backend_stream:${IMAGE_TAG}
                     """
+                    }
                 }
             }
         }
