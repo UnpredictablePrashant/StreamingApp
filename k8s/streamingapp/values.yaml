@@ -9,6 +9,9 @@ database:
       image: mongo:latest
       ports:
         containerPort: 27017
+      env:
+        MONGO_INITDB_ROOT_USERNAME: "root"
+        MONGO_INITDB_ROOT_PASSWORD: "example"
       volumeMounts:
         name: mongo-storage
         mountPath: /data/db
@@ -23,8 +26,6 @@ database:
     port: 27017
     targetPort: 27017
 
-
-
 auth_service:
   namespace: beauth
   labels:
@@ -37,17 +38,17 @@ auth_service:
       ports:
         containerPort: 3001
       env:
-        MONGO_URI: "mongodb+srv://ravikishan:Cluster0@cluster0.y9zohpu.mongodb.net/streemingapp"
+        MONGO_URI: "mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin"
+        # mongodb://root:example@mongo.<namespace>.svc.cluster.local:27017/admin
         # JWT_SECRET:
-  # AWS_KEY_ID:
-  # AWS_SECRET_KEY:
-  # AWS_REGION: "ap-northeast-2"
-  # AWS_S3_BUCKET: "streamingappservice"
+        # AWS_KEY_ID:
+        # AWS_SECRET_KEY:
+        AWS_REGION: "ap-northeast-2"
+        AWS_S3_BUCKET: "rakshi2502"
   ports:
     protocol: TCP
     port: 3001
     targetPort: 3001
-
 
 streaming_service:
   namespace: bestream
@@ -61,17 +62,16 @@ streaming_service:
       ports:
         containerPort: 3002
       env:
-        MONGO_URI: "mongodb+srv://ravikishan:Cluster0@cluster0.y9zohpu.mongodb.net/streemingapp"
+        MONGO_URI: "mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin"
         # JWT_SECRET:
-  # AWS_KEY_ID:
-  # AWS_SECRET_KEY:
-  # AWS_REGION: "ap-northeast-2"
-  # AWS_S3_BUCKET: "streamingappservice"
+        # AWS_KEY_ID:
+        # AWS_SECRET_KEY:
+        AWS_REGION: "ap-northeast-2"
+        AWS_S3_BUCKET: "rakshi2502"
   ports:
     protocol: TCP
     port: 3002
     targetPort: 3002
-
 
 frontend:
   namespace: frontend

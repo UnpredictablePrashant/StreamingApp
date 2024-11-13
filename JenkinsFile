@@ -8,7 +8,8 @@ pipeline {
         BACKEND_AUTH_NAMESPACE = 'beauth'
         BACKEND_STREAM_NAMESPACE = 'bestream'
         FRONTEND_NAMESPACE = 'frontend'
-        DATABASE_NAMESPACE = 'databaserb'
+        DATABASE_NAMESPACE = 'db'
+
 
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp'
@@ -33,34 +34,45 @@ pipeline {
             }
         }
 
-        stage ("add .env in backend") {
+        stage ("add .env in backend auth") {
             steps {
                 script {
                     sh """
-                    echo 'JWT_SECRET_KEY="MYREALLYSECRETKEY"
-                    MONGO_URL="mongodb+srv://ravikishan:Cluster0@cluster0.y9zohpu.mongodb.net/resumeai"
-                    OPENAI_KEY="OPENAI_API_KEY"
-                    GMAIL_USER="ravikishan1996@gmail.com"
-                    GMAIL_PASS="123456789"
-                    FRONT_END="http://localhost:80"' > ./ResumeBuilderBackend/.env
+                    echo "PORT=3001
+                    MONGO_URL="mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin"
+                    AWS_REGION='ap-northeast-2'" > ./backend/authService/.env
 
-                    ls -al ./ResumeBuilderBackend
+                    ls -al ./backend/authService
                     """
                 }
             }
         }
 
-        stage("add .env in frontend") {
+        stage ("add .env in backend streaming") {
             steps {
                 script {
                     sh """
-                    echo BACKEND_URL = "http://localhost:4292" > ./ResumeBuilderAngular/.env
+                    echo "PORT=3002
+                    MONGO_URL="mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin"
+                    AWS_REGION='ap-northeast-2'" > ./backend/streamingService/.env
 
-                    ls -al ./ResumeBuilderAngular
+                    ls -al ./backend/streamingService
                     """
                 }
             }
         }
+
+        // stage("add .env in frontend") {
+        //     steps {
+        //         script {
+        //             sh """
+        //             echo BACKEND_URL = "http://localhost:3002" > ./frontend/.env
+
+        //             ls -al ./frontend
+        //             """
+        //         }
+        //     }
+        // }
             
 
         stage('build and push docker images') {
@@ -80,7 +92,7 @@ pipeline {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
                         sh """
-                            helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --nsmespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
+                            helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
                         """    
                 }
             }

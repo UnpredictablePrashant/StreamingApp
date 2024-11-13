@@ -3,12 +3,12 @@ entries:
   streamingapp:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2024-11-02T10:58:48.142872324+05:30"
+    created: "2024-11-12T00:28:17.823788409+05:30"
     description: A Helm chart for Kubernetes
-    digest: a1610bfddeb548023ed4b75e8430178e5b2bc8d35e82ff6c4b2bce28acdb3e3e
+    digest: a1d004a85eb9bfdfacea4b793ee14c63f3cf6304503d24ced4a3af2dd611edde
     name: streamingapp
     type: application
     urls:
     - https://rakshicaps.s3.ap-northeast-2.amazonaws.com/k8s/streamingapp-0.1.0.tgz
     version: 0.1.0
-generated: "2024-11-02T10:58:48.133292026+05:30"
+generated: "2024-11-12T00:28:17.816557998+05:30"
