@@ -36,10 +36,10 @@ pipeline {
         stage('Build and Push Docker Images') {
             steps {
                 script {
+                    withCredentials([file(credentialsId: 'aws_credentials', variable: 'AKIA6GBMCU7ZEV3BHSTW')])
                     sh """
                         # Authenticate Docker to ECR public
                         aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/f8g8h5d4
-
 
                         # Build Docker images
                         docker compose build
