@@ -37,6 +37,10 @@ pipeline {
             steps {
                 script {
                     sh """
+                        # Authenticate Docker to ECR public
+                        aws ecr-public get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin public.ecr.aws
+
+
                         # Build Docker images
                         docker compose build
 
