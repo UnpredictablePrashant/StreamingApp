@@ -3,130 +3,94 @@ pipeline {
 
     environment {
         AWS_REGION = 'ap-northeast-2'
-        // ECR_REPO_NAME = 'ravicapstm'
-        // DOCKER_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-        // DOCKER_CREDENTIALS = credentials('aws-ecr-credentials') // AWS credentials ID in Jenkins
-        ECR_PUBLIC_REPOSITORY = 'public.ecr.aws/f8g8h5d4/ravicapstm'
-        AWS_CREDENTIALS = credentials('aws_credentials') // AWS credentials for CLI access
-        IMAGE_TAG = "${env.BUILD_ID}" // Use Jenkins build ID as tag
-        // DOCKER_REGISTRY = 'ravikishans'
-        // DOCKER_CREDENTIALS = credentials('ravikishans')
+        ECR_REPO_PREFIX = 'public.ecr.aws/ravicapstm' // Replace with your public ECR repository
+        IMAGE_TAG = "${env.BUILD_ID}" // Tag images with the Jenkins build ID
 
-        BACKEND_AUTH_NAMESPACE = 'beauth'
-        BACKEND_STREAM_NAMESPACE = 'bestream'
-        FRONTEND_NAMESPACE = 'frontend'
-        DATABASE_NAMESPACE = 'db'
-
-
-        HELM_RELEASE_NAME = "streamingapp"  
-        HELM_CHART_PATH = './k8s/streamingapp'
+        HELM_RELEASE_NAME = "streamingapp"
+        HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
     }
 
     stages {
-
-        stage ('checkout code') {
+        stage('Checkout Code') {
             steps {
-                script {
-                    git branch: 'main' , url: 'https://github.com/Ravikishans/StreamingApp.git'
-                }
-            }
-        }
-        stage("ls") {
-            steps {
-                script {
-                    sh """
-                    ls -al
-                    """
-                }
+                git branch: 'main', url: 'https://github.com/Ravikishans/StreamingApp.git'
             }
         }
 
-        stage ("add .env in backend auth") {
+        stage("Configure Environment Files for Backend Services") {
             steps {
-                script {
-                    sh """
-                    echo "PORT=3001
-                    MONGO_URL="mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin"
-                    AWS_REGION='ap-northeast-2'" > ./backend/authService/.env
+                sh """
+                    echo "MONGO_URI=mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin
+                    PORT=3001
+                    AWS_REGION=${AWS_REGION}
+                    AWS_S3_BUCKET=rakshi2502" > ./backend/authService/.env
 
-                    ls -al ./backend/authService
-                    """
-                }
+                    echo "MONGO_URI=mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin
+                    PORT=3002
+                    AWS_REGION=${AWS_REGION}
+                    AWS_S3_BUCKET=rakshi2502" > ./backend/streamingService/.env
+                """
             }
         }
 
-        stage ("add .env in backend streaming") {
+        stage('Build and Push Docker Images') {
             steps {
                 script {
                     sh """
-                    echo "PORT=3002
-                    MONGO_URL="mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin"
-                    AWS_REGION='ap-northeast-2'" > ./backend/streamingService/.env
-
-                    ls -al ./backend/streamingService
-                    """
-                }
-            }
-        }
-
-        // stage("add .env in frontend") {
-        //     steps {
-        //         script {
-        //             sh """
-        //             echo BACKEND_URL = "http://localhost:3002" > ./frontend/.env
-
-        //             ls -al ./frontend
-        //             """
-        //         }
-        //     }
-        // }
-            
-
-        stage('build and push docker images') {
-            steps {
-                script {
-                    sh """
+                        # Build Docker images
                         docker compose build
-                    """    
+
+                        # Tag images for ECR
+                        docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}/frontend:${IMAGE_TAG}
+                        docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}/backend_auth:${IMAGE_TAG}
+                        docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}/backend_stream:${IMAGE_TAG}
+
+                        # Push images to ECR
+                        docker push ${ECR_REPO_PREFIX}/frontend:${IMAGE_TAG}
+                        docker push ${ECR_REPO_PREFIX}/backend_auth:${IMAGE_TAG}
+                        docker push ${ECR_REPO_PREFIX}/backend_stream:${IMAGE_TAG}
+                    """
                 }
             }
         }
-        stage ('push image to ECR') {
+
+        stage('Update Helm Chart with ECR Image Tags') {
             steps {
                 script {
+                    // Replace image tags in Helm values file
                     sh """
-                        # Authenticate to AWS ECR Public
-                        aws ecr-public get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_PUBLIC_REPOSITORY}
-
-                        # Push Docker images to the public ECR repository
-                        docker compose push
-                    """    
+                        sed -i 's|frontend-image-tag|${IMAGE_TAG}|g' ${HELM_CHART_PATH}/values.yaml
+                        sed -i 's|backend-auth-image-tag|${IMAGE_TAG}|g' ${HELM_CHART_PATH}/values.yaml
+                        sed -i 's|backend-stream-image-tag|${IMAGE_TAG}|g' ${HELM_CHART_PATH}/values.yaml
+                    """
                 }
             }
         }
 
-        stage ('deploy to kubernates using helm') {
+        stage('Deploy to EKS Using Helm') {
             steps {
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
-                        sh """
-                            helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
-                        """    
+                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
+                    sh """
+                        aws eks --region ${AWS_REGION} update-kubeconfig --name ${EKS_CLUSTER_NAME}
+                        helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} \
+                        --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
+                    """
                 }
             }
         }
 
-        stage('verify deployment') {
+        stage('Verify Deployment') {
             steps {
-                script{
-                    withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
-                        sh "kubectl get pods -n ${BACKEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
-                        sh "kubectl get pods -n ${FRONTEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
-                        sh "kubectl get pods -n ${DATABASE_NAMESPACE} --kubeconfig=$KUBECONFIG"
+                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
+                    sh "kubectl get pods -n db --kubeconfig=$KUBECONFIG"
+                    sh "kubectl get pods -n beauth --kubeconfig=$KUBECONFIG"
+                    sh "kubectl get pods -n bestream --kubeconfig=$KUBECONFIG"
+                    sh "kubectl get pods -n frontend --kubeconfig=$KUBECONFIG"
                 }
             }
         }
     }
+
     post {
         success {
             echo "Pipeline executed successfully!"
