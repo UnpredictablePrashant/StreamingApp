@@ -105,27 +105,27 @@ pipeline {
             }
         }
 
-        // stage ('deploy to kubernates using helm') {
-        //     steps {
-        //         script {
-        //             withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
-        //                 sh """
-        //                     helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
-        //                 """    
-        //         }
-        //     }
-        // }
+        stage ('deploy to kubernates using helm') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
+                        sh """
+                            helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
+                        """    
+                }
+            }
+        }
 
-        // stage('verify deployment') {
-        //     steps {
-        //         script{
-        //             withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
-        //                 sh "kubectl get pods -n ${BACKEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
-        //                 sh "kubectl get pods -n ${FRONTEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
-        //                 sh "kubectl get pods -n ${DATABASE_NAMESPACE} --kubeconfig=$KUBECONFIG"
-        //         }
-        //     }
-        // }
+        stage('verify deployment') {
+            steps {
+                script{
+                    withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')])
+                        sh "kubectl get pods -n ${BACKEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
+                        sh "kubectl get pods -n ${FRONTEND_NAMESPACE} --kubeconfig=$KUBECONFIG"
+                        sh "kubectl get pods -n ${DATABASE_NAMESPACE} --kubeconfig=$KUBECONFIG"
+                }
+            }
+        }
     }
     post {
         success {
