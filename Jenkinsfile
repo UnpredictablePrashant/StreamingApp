@@ -48,14 +48,14 @@ pipeline {
                         docker compose build
 
                         # Tag images for ECR
-                        docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}/frontend:${IMAGE_TAG}
-                        docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}/backend_auth:${IMAGE_TAG}
-                        docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}/backend_stream:${IMAGE_TAG}
+                        docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}:frontend
+                        docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}:backend_auth
+                        docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}:backend_stream
 
                         # Push images to ECR
-                        docker push ${ECR_REPO_PREFIX}/frontend:${IMAGE_TAG}
-                        docker push ${ECR_REPO_PREFIX}/backend_auth:${IMAGE_TAG}
-                        docker push ${ECR_REPO_PREFIX}/backend_stream:${IMAGE_TAG}
+                        docker push ${ECR_REPO_PREFIX}:frontend
+                        docker push ${ECR_REPO_PREFIX}:backend_auth
+                        docker push ${ECR_REPO_PREFIX}:backend_stream
                     """
                     }
                 }
@@ -67,9 +67,9 @@ pipeline {
                 script {
                     // Replace image tags in Helm values file
                     sh """
-                        sed -i 's|frontend-image-tag|${IMAGE_TAG}|g' ${HELM_CHART_PATH}/values.yaml
-                        sed -i 's|backend-auth-image-tag|${IMAGE_TAG}|g' ${HELM_CHART_PATH}/values.yaml
-                        sed -i 's|backend-stream-image-tag|${IMAGE_TAG}|g' ${HELM_CHART_PATH}/values.yaml
+                        sed -i 's|frontend-image-tag|g' ${HELM_CHART_PATH}/values.yaml
+                        sed -i 's|backend-auth-image-tag|g' ${HELM_CHART_PATH}/values.yaml
+                        sed -i 's|backend-stream-image-tag|g' ${HELM_CHART_PATH}/values.yaml
                     """
                 }
             }
