@@ -7,7 +7,7 @@ pipeline {
         // DOCKER_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         // DOCKER_CREDENTIALS = credentials('aws-ecr-credentials') // AWS credentials ID in Jenkins
         ECR_PUBLIC_REPOSITORY = 'public.ecr.aws/f8g8h5d4/ravicapstm'
-        AWS_CREDENTIALS = credentials('aws-credentials') // AWS credentials for CLI access
+        AWS_CREDENTIALS = credentials('aws_credentials') // AWS credentials for CLI access
         IMAGE_TAG = "${env.BUILD_ID}" // Use Jenkins build ID as tag
         // DOCKER_REGISTRY = 'ravikishans'
         // DOCKER_CREDENTIALS = credentials('ravikishans')
