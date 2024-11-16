@@ -6,6 +6,7 @@ pipeline {
         ECR_REPO_PREFIX = 'public.ecr.aws/f8g8h5d4/ravicapstm' // Replace with your public ECR repository
         IMAGE_TAG = "${env.BUILD_ID}" // Tag images with the Jenkins build ID
         DOCKER_CREDENTIALS = credentials('ravikishans')
+        EKS_CLUSTER_NAME = ravi-caps
 
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
@@ -76,18 +77,18 @@ pipeline {
             }
         }
 
-        // stage('Update Helm Chart with ECR Image Tags') {
-        //     steps {
-        //         script {
-        //             // Replace image tags in Helm values file
-        //             sh """
-        //                 sed -i 's|frontend-image-tag|g' ${HELM_CHART_PATH}/values.yaml
-        //                 sed -i 's|backend-auth-image-tag|g' ${HELM_CHART_PATH}/values.yaml
-        //                 sed -i 's|backend-stream-image-tag|g' ${HELM_CHART_PATH}/values.yaml
-        //             """
-        //         }
-        //     }
-        // }
+        stage('Update Helm Chart with ECR Image Tags') {
+            steps {
+                script {
+                    sh """
+                        sed -i "s|frontend-image-tag|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
+                        sed -i "s|backend-auth-image-tag|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
+                        sed -i "s|backend-stream-image-tag|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
+                    """
+                }
+            }
+        }
+
 
         stage('Deploy to EKS Using Helm') {
             steps {
