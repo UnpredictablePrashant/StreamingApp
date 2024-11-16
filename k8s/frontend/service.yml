@@ -8,6 +8,6 @@ spec:
     app: streaming-frontend
   ports:
   - protocol: TCP
-    port: 9099
+    port: 3000
     targetPort: 3000
   type: LoadBalancer
