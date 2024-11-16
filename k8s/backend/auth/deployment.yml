@@ -31,16 +31,16 @@ spec:
         #     secretKeyRef:
         #       name: auth-backend-secrets
         #       key: JWT_SECRET
-        - name: AWS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: auth-backend-secrets
-              key: AWS_KEY_ID
-        - name: AWS_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: auth-backend-secrets
-              key: AWS_SECRET_KEY
+        # - name: AWS_KEY_ID
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: auth-backend-secrets
+        #       key: AWS_KEY_ID
+        # - name: AWS_SECRET_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: auth-backend-secrets
+        #       key: AWS_SECRET_KEY
         - name: AWS_REGION
           value: "ap-northeast-2"
         - name: AWS_S3_BUCKET
