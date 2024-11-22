@@ -7,6 +7,11 @@ WORKDIR /app
 # Copy project files to container
 COPY . .
 
+# Configure npm retry settings to handle network issues better
+RUN npm set fetch-retries 5 && \
+    npm set fetch-retry-mintimeout 20000 && \
+    npm set fetch-retry-maxtimeout 120000
+
 # Install dependencies and pm2
 RUN npm install
 RUN npm install -g pm2
