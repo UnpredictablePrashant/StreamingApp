@@ -22,8 +22,4 @@ EXPOSE 3000
 CMD ["/app/start.sh"]
 
 
-<<<<<<< HEAD
 # RUN npm install -g pm2
-=======
-RUN npm install -g pm2
->>>>>>> ae074c3cdfb0b166640ed121796a6b02c391efe8
