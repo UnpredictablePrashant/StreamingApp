@@ -1,0 +1,94 @@
+pipeline {
+    agent any
+
+    environment {
+        REPO_URL = 'https://github.com/Ravikishans/StreamingApp.git'
+        BRANCH = 'main'
+        IMAGE_TAG = "latest"
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Cloning repository from ${REPO_URL} and branch ${BRANCH}"
+                git url: "${REPO_URL}", branch: "${BRANCH}"
+            }
+        }
+        stage('Login to AWS') {
+            steps {
+                script {
+                    echo "Logging into AWS"
+                    // Use withCredentials to provide AWS access keys from Jenkins credentials store
+                    withCredentials([
+                        [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_credentials']]) 
+                        {
+                        // Now you can use the injected environment variables in your pipeline
+                        echo "AWS Login successful!"
+                    }
+                }
+            }
+        }
+        stage('Build React App Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image with tag: ${IMAGE_TAG}"
+                    // Build the Docker image and tag it for ECR
+                    sh """
+                        docker compose build
+                    """
+                    echo "Build Successful!"
+                }
+            }
+        }
+        stage('Push Docker Image to ECR') {
+            steps {
+                script {
+                    echo "Pushing Docker image to ECR"
+                    sh """
+                        docker compose push ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}
+                    """
+                    echo "Push Successful!"
+                }
+            }
+        }
+        
+        // stage('push & tag images') {
+        //     steps {
+        //         script{ 
+        //             withCredentials([[
+        //                 $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+        //             ]]) {
+        //                 sh """
+        //                 # Tag images for ECR
+        //                 docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}:frontend
+        //                 docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}:backend_auth
+        //                 docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}:backend_stream
+
+        //                 # Push images to ECR
+        //                 docker push ${ECR_REPO_PREFIX}:frontend
+        //                 docker push ${ECR_REPO_PREFIX}:backend_auth
+        //                 docker push ${ECR_REPO_PREFIX}:backend_stream
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
+    }
+    post {
+        success {
+            echo "Pipeline executed successfully!"
+        }
+        failure {
+            echo "Pipeline failed"
+        }
+        always {
+            echo "Post-pipeline cleanup or notifications"
+            script {
+                // Clean up Docker resources only if it's the 'main' branch
+                if (env.BRANCH == 'main') {
+                    echo 'Cleaning up Docker resources on the main branch'
+                    sh 'docker system prune -f'  // This removes unused Docker containers, images, networks, and volumes
+                }
+            }
+        }
+    }
+}

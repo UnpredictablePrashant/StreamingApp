@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'ap-northeast-2'
-        ECR_REPO_PREFIX = 'public.ecr.aws/f8g8h5d4/ravicapstm' // Replace with your public ECR repository
+        AWS_REGION = 'ap-south-1'
+        ECR_REPO_PREFIX = 'public.ecr.aws/d1k1o6n7/streamingapp' // Replace with your public ECR repository
         IMAGE_TAG = "${env.BUILD_ID}" // Tag images with the Jenkins build ID
         DOCKER_CREDENTIALS = credentials('ravikishans')
-        EKS_CLUSTER_NAME = ravi-caps
+        EKS_CLUSTER_NAME = streamingapp
 
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
@@ -19,21 +19,21 @@ pipeline {
             }
         }
 
-        stage("Configure Environment Files for Backend Services") {
-            steps {
-                sh """
-                    echo "MONGO_URI=mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin
-                    PORT=3001
-                    AWS_REGION=${AWS_REGION}
-                    AWS_S3_BUCKET=rakshi2502" > ./backend/authService/.env
+        // stage("Configure Environment Files for Backend Services") {
+        //     steps {
+        //         sh """
+        //             echo "MONGO_URI=mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin
+        //             PORT=3001
+        //             AWS_REGION=${AWS_REGION}
+        //             AWS_S3_BUCKET=rakshi2502" > ./backend/authService/.env
 
-                    echo "MONGO_URI=mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin
-                    PORT=3002
-                    AWS_REGION=${AWS_REGION}
-                    AWS_S3_BUCKET=rakshi2502" > ./backend/streamingService/.env
-                """
-            }
-        }
+        //             echo "MONGO_URI=mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin
+        //             PORT=3002
+        //             AWS_REGION=${AWS_REGION}
+        //             AWS_S3_BUCKET=rakshi2502" > ./backend/streamingService/.env
+        //         """
+        //     }
+        // }
 
         stage('Build and Push Docker Images') {
             steps {
@@ -43,7 +43,7 @@ pipeline {
                     ]]) {
                         sh """
                         # Authenticate Docker to ECR public
-                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/f8g8h5d4
+                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d1k1o6n7
 
                         # Build Docker images
                         docker compose build
