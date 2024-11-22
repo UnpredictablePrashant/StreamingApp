@@ -17,7 +17,7 @@ resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
   tags = {
     Name = "${var.project}-vpc"
-    Description= "travel_memory"
+    Description= "streaming-app"
   }  
 }
 
@@ -154,6 +154,12 @@ resource "aws_security_group" "security_groups" {
     cidr_blocks = [ "0.0.0.0/0" ]
   }
   ingress {
+    from_port = 3002
+    to_port = 3002
+    protocol = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+  ingress {
     from_port = 27017
     to_port = 27017
     protocol = "tcp"
@@ -170,187 +176,114 @@ resource "aws_security_group" "security_groups" {
   }
 }
 
-# Backend EC2 Instance
-resource "aws_instance" "backend_server" {
-  ami                    = var.aws_ami
-  instance_type          = var.instance_type
-  key_name               = "raviAWS"
-  subnet_id              = aws_subnet.private_subnet[0].id
-  vpc_security_group_ids = [aws_security_group.security_groups.id]
-  tags = {
-    Name = "${var.project}-backend"
-  }
-}  
+resource "aws_eks_cluster" "eks_cluster" {
+  name     = "${var.project}-eks-cluster"
+  role_arn = aws_iam_role.eks_cluster_role.arn
 
-# database EC2 Instance
-resource "aws_instance" "data_base" {
-  ami                    = var.aws_ami
-  instance_type          = var.instance_type
-  key_name               = "raviAWS"
-  subnet_id              = aws_subnet.private_subnet[0].id
-  vpc_security_group_ids = [aws_security_group.security_groups.id]
-  tags = {
-    Name = "${var.project}-database"
-  }
-} 
-
-# Frontend EC2 Instance
-resource "aws_instance" "frontend_server" {
-  ami                    = var.aws_ami
-  instance_type          = var.instance_type
-  key_name               = "raviAWS"
-  subnet_id              = aws_subnet.public_subnet[1].id
-  vpc_security_group_ids = [aws_security_group.security_groups.id]
-
-  tags = {
-    Name = "${var.project}-frontend"
-  }
-}
-
-# Define the target group for frontend
-resource "aws_lb_target_group" "frontend_tg" {
-  name     = "${var.project}-frontend-tg"
-  port     = 3000
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
-
-  health_check {
-    path                = "/"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
-  tags = {
-    Name = "${var.project}-frontend-tg"
-  }
-}
-# Associate frontend instance with the frontend target group
-resource "aws_lb_target_group_attachment" "frontend_attachment" {
-  target_group_arn = aws_lb_target_group.frontend_tg.arn
-  target_id        = aws_instance.frontend_server.id
-}
-
-# Define the target group for backend
-resource "aws_lb_target_group" "backend_tg" {
-  name     = "${var.project}-backend-tg"
-  port     = 3001
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
-
-  health_check {
-    path                = "/hello"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
-  tags = {
-    Name = "${var.project}-backend-tg"
-  }
-}
-
-# Associate backend instance with the database target group
-resource "aws_lb_target_group_attachment" "backend_attachment" {
-  target_group_arn = aws_lb_target_group.backend_tg.arn
-  target_id        = aws_instance.backend_server.id
-}
-
-# Associate database instance with the database target group
-resource "aws_lb_target_group_attachment" "database_attachment" {
-  target_group_arn = aws_lb_target_group.databse_tg.arn
-  target_id        = aws_instance.data_base.id
-}
-
-# Define the target group for backend
-resource "aws_lb_target_group" "databse_tg" {
-  name     = "${var.project}-database-tg"
-  port     = 27017
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
-
-  health_check {
-    path                = "/db"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
+  vpc_config {
+    subnet_ids         = concat(aws_subnet.public_subnet[*].id, aws_subnet.private_subnet[*].id)
+    endpoint_public_access = true
   }
 
   tags = {
-    Name = "${var.project}-database-tg"
+    Name = "${var.project}-eks-cluster"
   }
 }
 
+# EKS Cluster IAM Role
+resource "aws_iam_role" "eks_cluster_role" {
+  name = "${var.project}-eks-cluster-role"
 
-
-# ELB creation
-resource "aws_lb" "alb" {
-  name               = "${var.project}-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.security_groups.id]
-  subnets            = [for subnet in aws_subnet.public_subnet : subnet.id]
-  
-
-  enable_deletion_protection = false
-
-  # access_logs {
-  #   bucket  = aws_s3_bucket.lb_logs.id
-  #   prefix  = "test-lb"
-  #   enabled = true
-  # }
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "eks.amazonaws.com"
+      }
+      Effect = "Allow"
+    }]
+  })
 
   tags = {
-    Environment = "production"
+    Name = "${var.project}-eks-cluster-role"
   }
 }
 
-
-# Define the listener for HTTP
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.alb.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type = "fixed-response"
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Welcome to the Load Balancer!"
-      status_code  = "200"
-    }
-  }
-}
-resource "aws_lb_listener_rule" "api_rule" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 1
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.backend_tg.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/hello/*"]
-    }
-  }
+resource "aws_iam_role_policy_attachment" "eks_cluster_policy_attachment" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.eks_cluster_role.name
 }
 
-resource "aws_lb_listener_rule" "default_rule" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 2
+resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller_attachment" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+  role       = aws_iam_role.eks_cluster_role.name
+}
 
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.frontend_tg.arn
+# EKS Node Group
+resource "aws_eks_node_group" "eks_node_group" {
+  cluster_name    = aws_eks_cluster.eks_cluster.name
+  node_group_name = "${var.project}-eks-node-group"
+  node_role_arn      = aws_iam_role.eks_node_role.arn
+  subnet_ids      = aws_subnet.private_subnet[*].id
+
+  scaling_config {
+    desired_size = 4
+    min_size     = 4
+    max_size     = 8
   }
 
-  condition {
-    path_pattern {
-      values = ["/*"]
-    }
+  ami_type        = "AL2_x86_64"
+  instance_types  = ["t3.small"]
+  disk_size       = 20
+
+  tags = {
+    Name = "${var.project}-eks-node-group"
   }
 }
+
+# Node Group IAM Role
+resource "aws_iam_role" "eks_node_role" {
+  name = "${var.project}-eks-node-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+      Effect = "Allow"
+    }]
+  })
+
+  tags = {
+    Name = "${var.project}-eks-node-role"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "eks_worker_node_attachment" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  role       = aws_iam_role.eks_node_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "eks_cni_attachment" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  role       = aws_iam_role.eks_node_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_container_registry_attachment" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.eks_node_role.name
+}
+
+# # CloudFormation Stack for VPC (Optional)
+# resource "aws_cloudformation_stack" "vpc_stack" {
+#   name          = "${var.project}-vpc-stack"
+#   template_body = file("cloudformation_vpc_template.yaml")
+
+#   tags = {
+#     Name = "${var.project}-vpc-stack"
+#   }
+# }
 
