@@ -109,10 +109,17 @@ spec:
         #     secretKeyRef:
         #       name: auth-backend-secrets
         #       key: AWS_SECRET_KEY
+<<<<<<< HEAD
         # - name: AWS_REGION
         #   value: {{ .Values.auth_service.spec.containers.env.AWS_REGION }}
         # - name: AWS_S3_BUCKET
         #   value: {{ .Values.auth_service.spec.containers.env.AWS_S3_BUCKET }}
+=======
+        - name: AWS_REGION
+          value: {{ .Values.auth_service.spec.containers.env.AWS_REGION }}
+        - name: AWS_S3_BUCKET
+          value: {{ .Values.auth_service.spec.containers.env.AWS_S3_BUCKET }}
+>>>>>>> ae074c3cdfb0b166640ed121796a6b02c391efe8
 
 ---
 
@@ -160,10 +167,17 @@ spec:
         #     secretKeyRef:
         #       name: stream-backend-secrets
         #       key: AWS_SECRET_KEY
+<<<<<<< HEAD
         # - name: AWS_REGION
         #   value: {{ .Values.streaming_service.spec.containers.env.AWS_REGION }}
         # - name: AWS_S3_BUCKET
         #   value: {{ .Values.streaming_service.spec.containers.env.AWS_S3_BUCKET }}
+=======
+        - name: AWS_REGION
+          value: {{ .Values.streaming_service.spec.containers.env.AWS_REGION }}
+        - name: AWS_S3_BUCKET
+          value: {{ .Values.streaming_service.spec.containers.env.AWS_S3_BUCKET }}
+>>>>>>> ae074c3cdfb0b166640ed121796a6b02c391efe8
 
 
 
