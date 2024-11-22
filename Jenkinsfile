@@ -6,7 +6,7 @@ pipeline {
         ECR_REPO_PREFIX = 'public.ecr.aws/d1k1o6n7/streamingapp' // Replace with your public ECR repository
         IMAGE_TAG = "${env.BUILD_ID}" // Tag images with the Jenkins build ID
         DOCKER_CREDENTIALS = credentials('ravikishans')
-        EKS_CLUSTER_NAME = streamingapp
+        EKS_CLUSTER_NAME = "streamingapp-eks-cluster"
 
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
