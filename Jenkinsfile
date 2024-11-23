@@ -128,40 +128,7 @@ pipeline {
             }
         }
 
-        stage('ArgoCD Login') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'argocd-admin', usernameVariable: 'ARGOCD_USERNAME', passwordVariable: 'ARGOCD_PASSWORD')]) {
-                        sh """
-                        # Login to ArgoCD
-                        argocd login ${ARGOCD_SERVER} --username ${ARGOCD_USERNAME} --password ${ARGOCD_PASSWORD} --insecure
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Sync ArgoCD Application') {
-            steps {
-                script {
-                    sh """
-                    # Synchronize the application
-                    argocd app sync ${ARGOCD_APP_NAME}
-                    """
-                }
-            }
-        }
-
-        stage('Verify ArgoCD Application Sync') {
-            steps {
-                script {
-                    sh """
-                    # Check ArgoCD app status
-                    argocd app get ${ARGOCD_APP_NAME}
-                    """
-                }
-            }
-        }
+        
 
         stage('verify deployment') {
             steps {
