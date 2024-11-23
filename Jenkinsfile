@@ -168,6 +168,20 @@ pipeline {
                 }    
             }
         }
+        stage('verify deployment') {
+            steps {
+                script{ 
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        kubectl get pods --all-namespaces
+                        kubectl get svc --all-namespaces
+                        """
+                    }
+                }    
+            }
+        } 
 
         // stage('Deploy to EKS Using Helm') {
         //     steps {
@@ -199,22 +213,7 @@ pipeline {
     //             }
     //         }
     //     }
-    // }
-
-        stage('verify deployment') {
-            steps {
-                script{ 
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
-                    ]]) {
-                        sh """
-                        kubectl get pods --all-namespaces
-                        kubectl get svc --all-namespaces
-                        """
-                    }
-                }    
-            }
-        } 
+    }
 
     post {
         success {
