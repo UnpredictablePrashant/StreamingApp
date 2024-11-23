@@ -59,76 +59,76 @@ pipeline {
         //     }
         // }
 
+//
+        // stage('Build and Push Docker Images') {
+        //     steps {
+        //         script {
+        //             withCredentials([[
+        //                 $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials' // Update with your actual AWS credentials ID in Jenkins
+        //             ]]) {
+        //                 sh """
+        //                 # Authenticate Docker to ECR public
+        //                 aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d1k1o6n7
 
-        stage('Build and Push Docker Images') {
-            steps {
-                script {
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials' // Update with your actual AWS credentials ID in Jenkins
-                    ]]) {
-                        sh """
-                        # Authenticate Docker to ECR public
-                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d1k1o6n7
-
-                        # Build Docker images
-                        docker compose build
+        //                 # Build Docker images
+        //                 docker compose build
 
                         
-                    """
-                    }
-                }
-            }
-        }
+        //             """
+        //             }
+        //         }
+        //     }
+        // }
 
-        stage('push & tag images') {
-            steps {
-                script{ 
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
-                    ]]) {
-                        sh """
-                        # Tag images for ECR
-                        docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}:frontend
-                        docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}:backend_auth
-                        docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}:backend_stream
-                        docker tag mongo ${ECR_REPO_PREFIX}:mongo
-                        docker tag mongo-express ${ECR_REPO_PREFIX}:mongo-express
-                        # Push images to ECR
-                        docker push ${ECR_REPO_PREFIX}:frontend
-                        docker push ${ECR_REPO_PREFIX}:backend_auth
-                        docker push ${ECR_REPO_PREFIX}:backend_stream
-                        docker push ${ECR_REPO_PREFIX}:mongo
-                        docker push ${ECR_REPO_PREFIX}:mongo-express
-                        """
-                    }
-                }
-            }
-        }
+        // stage('push & tag images') {
+        //     steps {
+        //         script{ 
+        //             withCredentials([[
+        //                 $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+        //             ]]) {
+        //                 sh """
+        //                 # Tag images for ECR
+        //                 docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}:frontend
+        //                 docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}:backend_auth
+        //                 docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}:backend_stream
+        //                 docker tag mongo ${ECR_REPO_PREFIX}:mongo
+        //                 docker tag mongo-express ${ECR_REPO_PREFIX}:mongo-express
+        //                 # Push images to ECR
+        //                 docker push ${ECR_REPO_PREFIX}:frontend
+        //                 docker push ${ECR_REPO_PREFIX}:backend_auth
+        //                 docker push ${ECR_REPO_PREFIX}:backend_stream
+        //                 docker push ${ECR_REPO_PREFIX}:mongo
+        //                 docker push ${ECR_REPO_PREFIX}:mongo-express
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
 
-        stage('Validate Placeholders in Helm Chart') {
-            steps {
-                script {
-                    sh """
-                        grep 'ravikishans/streamingapp:frontend' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
-                        grep 'ravikishans/streamingapp:backend_auth' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
-                        grep 'ravikishans/streamingapp:backend_stream' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
-                    """
-                }
-            }
-        }
+        // stage('Validate Placeholders in Helm Chart') {
+        //     steps {
+        //         script {
+        //             sh """
+        //                 grep 'ravikishans/streamingapp:frontend' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
+        //                 grep 'ravikishans/streamingapp:backend_auth' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
+        //                 grep 'ravikishans/streamingapp:backend_stream' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
+        //             """
+        //         }
+        //     }
+        // }
 
-        stage('Update Helm Chart with ECR Image Tags') {
-            steps {
-                script {
-                    sh """
-                        sed -i "s|ravikishans/streamingapp:frontend|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
-                        sed -i "s|ravikishans/streamingapp:backend_auth|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
-                        sed -i "s|ravikishans/streamingapp:backend_stream|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
-                        sed -i "s|mongo:latest|${ECR_REPO_PREFIX}:mongo|g" ${HELM_CHART_PATH}/values.yaml
-                    """
-                }
-            }
-        }
+        // stage('Update Helm Chart with ECR Image Tags') {
+        //     steps {
+        //         script {
+        //             sh """
+        //                 sed -i "s|ravikishans/streamingapp:frontend|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
+        //                 sed -i "s|ravikishans/streamingapp:backend_auth|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
+        //                 sed -i "s|ravikishans/streamingapp:backend_stream|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
+        //                 sed -i "s|mongo:latest|${ECR_REPO_PREFIX}:mongo|g" ${HELM_CHART_PATH}/values.yaml
+        //             """
+        //         }
+        //     }
+        // }
         stage('value.yaml') {
             steps {
                 script {
