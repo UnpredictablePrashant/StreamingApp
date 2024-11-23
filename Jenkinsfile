@@ -139,7 +139,7 @@ pipeline {
             }
         }
 
-        stage('push & tag images') {
+        stage('eks update') {
             steps {
                 script{ 
                     withCredentials([[
@@ -147,6 +147,7 @@ pipeline {
                     ]]) {
                         sh """
                         aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
+                        kubectl get pods --all-namespaces
                         """
                     }
                 }    

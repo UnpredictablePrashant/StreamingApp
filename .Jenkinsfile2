@@ -92,3 +92,33 @@ pipeline {
         }
     }
 }
+
+
+stage('Tag and Push image to ECR') {
+            steps {
+                script {
+                    echo "Providing tags to images"
+                    withCredentials([
+                        [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) 
+                        {
+                    sh """
+                        # Tag images with the correct repository name
+                        docker tag ravikishans/streamingapp:frontend ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:frontend
+                        docker tag ravikishans/streamingapp:backend_auth ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:backend_auth
+                        docker tag ravikishans/streamingapp:backend_stream ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:backend_stream
+
+                        echo "Image Tagging Successful!"
+
+                        # Push images to ECR
+                        #docker push ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:frontend
+                        docker push 975050024946.dkr.ecr.ap-northeast-3.amazonaws.com/shrutika-capstoneproject:frontend
+                        #docker push ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:backend_auth
+                        docker push 975050024946.dkr.ecr.ap-northeast-3.amazonaws.com/shrutika-capstoneproject:backend_auth
+                        #docker push ${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO_NAME}:backend_stream
+                        docker push 975050024946.dkr.ecr.ap-northeast-3.amazonaws.com/shrutika-capstoneproject:backend_stream
+                    """                    
+                    echo "Push Successful!"
+                    }
+                }
+            }
+        }
