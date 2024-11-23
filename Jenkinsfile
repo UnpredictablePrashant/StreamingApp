@@ -88,6 +88,15 @@ pipeline {
                 }
             }
         }
+        stage('value.yaml') {
+            steps {
+                script {
+                    sh """
+                       cat ${HELM_CHART_PATH}/values.yaml
+                    """   
+                }
+            }
+        }
 
 
         // stage('Deploy to EKS Using Helm') {
