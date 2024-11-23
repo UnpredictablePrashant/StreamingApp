@@ -43,8 +43,7 @@ pipeline {
                     ]]) {
                         sh """
                             # Authenticate Docker to ECR public
-                            aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d1k1o6n7
-
+                            aws ecr-public get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_PREFIX}
                             # List images in the ECR repository and delete images that are not the latest one
                             echo "Listing images in ${ECR_REPO_PREFIX}"
                             IMAGE_IDS=\$(aws ecr describe-images --repository-name streamingapp --query "imageIds[?imageTag!='${IMAGE_TAG}'].imageDigest" --output text)
