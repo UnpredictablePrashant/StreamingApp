@@ -77,17 +77,17 @@ pipeline {
             }
         }
 
-        // stage('Update Helm Chart with ECR Image Tags') {
-        //     steps {
-        //         script {
-        //             sh """
-        //                 sed -i "s|frontend-image-tag|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
-        //                 sed -i "s|backend-auth-image-tag|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
-        //                 sed -i "s|backend-stream-image-tag|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
-        //             """
-        //         }
-        //     }
-        // }
+        stage('Update Helm Chart with ECR Image Tags') {
+            steps {
+                script {
+                    sh """
+                        sed -i "s|frontend-image-tag|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
+                        sed -i "s|backend-auth-image-tag|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
+                        sed -i "s|backend-stream-image-tag|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
+                    """
+                }
+            }
+        }
 
 
         // stage('Deploy to EKS Using Helm') {
