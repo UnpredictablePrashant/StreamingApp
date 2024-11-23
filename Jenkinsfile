@@ -142,11 +142,11 @@ pipeline {
 
         stage('Deploy to EKS Using Helm') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
+                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'Kubeconfig')]) {
                     sh """
                         aws eks --region ${AWS_REGION} update-kubeconfig --name ${EKS_CLUSTER_NAME}
                         helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} \
-                        --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
+                        --namespace default --create-namespace --kubeconfig=$Kubeconfig --debug
                     """
                 }
             }
@@ -154,11 +154,11 @@ pipeline {
 
         stage('Verify Deployment') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
-                    sh "kubectl get pods -n db --kubeconfig=$KUBECONFIG"
-                    sh "kubectl get pods -n beauth --kubeconfig=$KUBECONFIG"
-                    sh "kubectl get pods -n bestream --kubeconfig=$KUBECONFIG"
-                    sh "kubectl get pods -n frontend --kubeconfig=$KUBECONFIG"
+                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'Kubeconfig')]) {
+                    sh "kubectl get pods -n db --kubeconfig=$Kubeconfig"
+                    sh "kubectl get pods -n beauth --kubeconfig=$Kubeconfig"
+                    sh "kubectl get pods -n bestream --kubeconfig=$Kubeconfig"
+                    sh "kubectl get pods -n frontend --kubeconfig=$Kubeconfig"
                 }
             }
         }
