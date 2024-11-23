@@ -161,7 +161,7 @@ pipeline {
                 }
             }
         }
-        stage('Verify Deployment') {
+        stage('get svc') {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'Kubeconfig')]) {
                     sh "kubectl get svc -n db --kubeconfig=$Kubeconfig"
