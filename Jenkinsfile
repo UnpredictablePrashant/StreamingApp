@@ -155,7 +155,7 @@ pipeline {
             }
         }    
 
-        stage('eks update') {
+        stage('helm deploy') {
             steps {
                 script{ 
                     withCredentials([[
