@@ -144,9 +144,8 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'Kubeconfig')]) {
                     sh """
-                        aws eks --region ${AWS_REGION} update-kubeconfig --name ${EKS_CLUSTER_NAME}
-                        helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} \
-                        --namespace default --create-namespace --kubeconfig=$Kubeconfig --debug
+                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
+                        helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$Kubeconfig --debug
                     """
                 }
             }
@@ -159,6 +158,16 @@ pipeline {
                     sh "kubectl get pods -n beauth --kubeconfig=$Kubeconfig"
                     sh "kubectl get pods -n bestream --kubeconfig=$Kubeconfig"
                     sh "kubectl get pods -n frontend --kubeconfig=$Kubeconfig"
+                }
+            }
+        }
+        stage('Verify Deployment') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'Kubeconfig')]) {
+                    sh "kubectl get svc -n db --kubeconfig=$Kubeconfig"
+                    sh "kubectl get svc -n beauth --kubeconfig=$Kubeconfig"
+                    sh "kubectl get svc -n bestream --kubeconfig=$Kubeconfig"
+                    sh "kubectl get svc -n frontend --kubeconfig=$Kubeconfig"
                 }
             }
         }
