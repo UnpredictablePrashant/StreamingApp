@@ -66,11 +66,14 @@ pipeline {
                         docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}:frontend
                         docker tag ravikishans/streamingapp:backend_auth ${ECR_REPO_PREFIX}:backend_auth
                         docker tag ravikishans/streamingapp:backend_stream ${ECR_REPO_PREFIX}:backend_stream
-
+                        docker tag mongo ${ECR_REPO_PREFIX}:mongo
+                        docker tag mongo-express ${ECR_REPO_PREFIX}:mongo-express
                         # Push images to ECR
                         docker push ${ECR_REPO_PREFIX}:frontend
                         docker push ${ECR_REPO_PREFIX}:backend_auth
                         docker push ${ECR_REPO_PREFIX}:backend_stream
+                        docker push ${ECR_REPO_PREFIX}:mongo
+                        docker push ${ECR_REPO_PREFIX}:mongo-express
                         """
                     }
                 }
