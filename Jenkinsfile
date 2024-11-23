@@ -149,7 +149,9 @@ pipeline {
                         aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
                         """
                     }
-
+                }    
+            }
+        }    
 
         stage('Deploy to EKS Using Helm') {
             steps {
