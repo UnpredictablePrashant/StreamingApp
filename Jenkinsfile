@@ -81,6 +81,8 @@ pipeline {
             steps {
                 script {
                     sh """
+                        sh "chmod +w ${HELM_CHART_PATH}/values.yaml"
+                        sh "grep 'frontend-image-tag' ${HELM_CHART_PATH}/values.yaml"
                         sed -i "s|frontend-image-tag|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
                         sed -i "s|backend-auth-image-tag|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
                         sed -i "s|backend-stream-image-tag|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
