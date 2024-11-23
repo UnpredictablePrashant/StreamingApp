@@ -39,8 +39,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',
-                        credentialsId: 'aws_credentials'  // Replace with actual AWS credentials
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials' // Update with your actual AWS credentials ID in Jenkins
                     ]]) {
                         sh """
                             # Authenticate Docker to ECR public
