@@ -35,29 +35,29 @@ pipeline {
         //     }
         // }
 
-        stage('Delete Old Images from ECR') {
-            steps {
-                script {
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials' // Update with your actual AWS credentials ID in Jenkins
-                    ]]) {
-                        sh """
-                            # Authenticate Docker to ECR public
-                            aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d1k1o6n7
-                            # List images in the ECR repository and delete images that are not the latest one
-                            echo "Listing images in ${ECR_REPO_PREFIX}"
-                            IMAGE_IDS=\$(aws ecr describe-images --repository-name streamingapp --query "imageIds.imageDigest" --output json)
-                            if [ -n "\$IMAGE_IDS" ]; then
-                                echo "Deleting old images"
-                                aws ecr batch-delete-image --repository-name streamingapp --image-ids imageDigest=\$IMAGE_IDS
-                            else
-                                echo "No old images to delete"
-                            fi
-                        """
-                    }
-                }
-            }
-        }
+        // stage('Delete Old Images from ECR') {
+        //     steps {
+        //         script {
+        //             withCredentials([[
+        //                 $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials' // Update with your actual AWS credentials ID in Jenkins
+        //             ]]) {
+        //                 sh """
+        //                     # Authenticate Docker to ECR public
+        //                     aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d1k1o6n7
+        //                     # List images in the ECR repository and delete images that are not the latest one
+        //                     echo "Listing images in ${ECR_REPO_PREFIX}"
+        //                     IMAGE_IDS=\$(aws ecr describe-images --repository-name streamingapp --query "imageIds.imageDigest" --output json)
+        //                     if [ -n "\$IMAGE_IDS" ]; then
+        //                         echo "Deleting old images"
+        //                         aws ecr batch-delete-image --repository-name streamingapp --image-ids imageDigest=\$IMAGE_IDS
+        //                     else
+        //                         echo "No old images to delete"
+        //                     fi
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
 
 
         stage('Build and Push Docker Images') {
@@ -140,28 +140,28 @@ pipeline {
         }
 
 
-        // stage('Deploy to EKS Using Helm') {
-        //     steps {
-        //         withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
-        //             sh """
-        //                 aws eks --region ${AWS_REGION} update-kubeconfig --name ${EKS_CLUSTER_NAME}
-        //                 helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} \
-        //                 --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
-        //             """
-        //         }
-        //     }
-        // }
+        stage('Deploy to EKS Using Helm') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
+                    sh """
+                        aws eks --region ${AWS_REGION} update-kubeconfig --name ${EKS_CLUSTER_NAME}
+                        helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} \
+                        --namespace default --create-namespace --kubeconfig=$KUBECONFIG --debug
+                    """
+                }
+            }
+        }
 
-//         stage('Verify Deployment') {
-//             steps {
-//                 withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
-//                     sh "kubectl get pods -n db --kubeconfig=$KUBECONFIG"
-//                     sh "kubectl get pods -n beauth --kubeconfig=$KUBECONFIG"
-//                     sh "kubectl get pods -n bestream --kubeconfig=$KUBECONFIG"
-//                     sh "kubectl get pods -n frontend --kubeconfig=$KUBECONFIG"
-//                 }
-//             }
-//         }
+        stage('Verify Deployment') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
+                    sh "kubectl get pods -n db --kubeconfig=$KUBECONFIG"
+                    sh "kubectl get pods -n beauth --kubeconfig=$KUBECONFIG"
+                    sh "kubectl get pods -n bestream --kubeconfig=$KUBECONFIG"
+                    sh "kubectl get pods -n frontend --kubeconfig=$KUBECONFIG"
+                }
+            }
+        }
     }
 
     post {
