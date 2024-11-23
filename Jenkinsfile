@@ -6,10 +6,7 @@ pipeline {
         ECR_REPO_PREFIX = 'public.ecr.aws/d1k1o6n7/streamingapp' // Replace with your public ECR repository
         DOCKER_CREDENTIALS = credentials('ravikishans')
         EKS_CLUSTER_NAME = "streamingapp-eks-cluster"
-        ARGOCD_SERVER= "https://a14e8200912ca401db17b015634f9a1b-715262143.ap-south-1.elb.amazonaws.com/applications/argocd/streamingapp?resource=&view=network"
-        ARGOCD_APP_NAME= "streamingapp"
-        ARGOCD_CREDENTIALS = credentials('argocd-admin')
-        BRANCH= "main"
+        
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
     }
