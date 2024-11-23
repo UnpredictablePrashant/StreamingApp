@@ -179,27 +179,42 @@ pipeline {
         //     }
         // }
 
-        stage('Verify Deployment') {
+    //     stage('Verify Deployment') {
+    //         steps {
+    //             withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
+    //                 sh "kubectl get pods -n db --kubeconfig=$KUBECONFIG"
+    //                 sh "kubectl get pods -n beauth --kubeconfig=$KUBECONFIG"
+    //                 sh "kubectl get pods -n bestream --kubeconfig=$KUBECONFIG"
+    //                 sh "kubectl get pods -n frontend --kubeconfig=$KUBECONFIG"
+    //             }
+    //         }
+    //     }
+    //     stage('get svc') {
+    //         steps {
+    //             withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
+    //                 sh "kubectl get svc -n db --kubeconfig=$KUBECONFIG"
+    //                 sh "kubectl get svc -n beauth --kubeconfig=$KUBECONFIG"
+    //                 sh "kubectl get svc -n bestream --kubeconfig=$KUBECONFIG"
+    //                 sh "kubectl get svc -n frontend --kubeconfig=$KUBECONFIG"
+    //             }
+    //         }
+    //     }
+    // }
+
+        stage('verify deployment') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
-                    sh "kubectl get pods -n db --kubeconfig=$KUBECONFIG"
-                    sh "kubectl get pods -n beauth --kubeconfig=$KUBECONFIG"
-                    sh "kubectl get pods -n bestream --kubeconfig=$KUBECONFIG"
-                    sh "kubectl get pods -n frontend --kubeconfig=$KUBECONFIG"
-                }
+                script{ 
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        kubectl get pods --all-namespaces
+                        kubectl get svc --all-namespaces
+                        """
+                    }
+                }    
             }
-        }
-        stage('get svc') {
-            steps {
-                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
-                    sh "kubectl get svc -n db --kubeconfig=$KUBECONFIG"
-                    sh "kubectl get svc -n beauth --kubeconfig=$KUBECONFIG"
-                    sh "kubectl get svc -n bestream --kubeconfig=$KUBECONFIG"
-                    sh "kubectl get svc -n frontend --kubeconfig=$KUBECONFIG"
-                }
-            }
-        }
-    }
+        } 
 
     post {
         success {
