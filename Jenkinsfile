@@ -133,13 +133,6 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'argocd-admin', usernameVariable: 'ARGOCD_USERNAME', passwordVariable: 'ARGOCD_PASSWORD')]) {
                         sh """
-                        # Download ArgoCD CLI if not installed
-                        if ! [ -x "$(command -v argocd)" ]; then
-                            curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-                            chmod +x argocd
-                            mv argocd /usr/local/bin/
-                        fi
-
                         # Login to ArgoCD
                         argocd login ${ARGOCD_SERVER} --username ${ARGOCD_USERNAME} --password ${ARGOCD_PASSWORD} --insecure
                         """
