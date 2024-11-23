@@ -139,12 +139,22 @@ pipeline {
             }
         }
 
+        stage('push & tag images') {
+            steps {
+                script{ 
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
+                        """
+                    }
+
 
         stage('Deploy to EKS Using Helm') {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'Kubeconfig')]) {
                     sh """
-                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
                         helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$Kubeconfig --debug
                     """
                 }
