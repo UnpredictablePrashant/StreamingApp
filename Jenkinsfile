@@ -148,21 +148,36 @@ pipeline {
                         sh """
                         aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
                         kubectl get pods --all-namespaces
+                        kubectl get svc --all-namespaces
                         """
                     }
                 }    
             }
         }    
 
-        stage('Deploy to EKS Using Helm') {
+        stage('eks update') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'Kubeconfig')]) {
-                    sh """
-                        helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$Kubeconfig --debug
-                    """
-                }
+                script{ 
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace
+                        """
+                    }
+                }    
             }
         }
+
+        // stage('Deploy to EKS Using Helm') {
+        //     steps {
+        //         withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'Kubeconfig')]) {
+        //             sh """
+        //                 helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace --kubeconfig=$Kubeconfig --debug
+        //             """
+        //         }
+        //     }
+        // }
 
         stage('Verify Deployment') {
             steps {
