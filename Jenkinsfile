@@ -84,9 +84,9 @@ pipeline {
             steps {
                 script {
                     sh """
-                        grep 'frontend-image-tag' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
-                        grep 'backend-auth-image-tag' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
-                        grep 'backend-stream-image-tag' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
+                        grep 'ravikishans/streamingapp:frontend' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
+                        grep 'ravikishans/streamingapp:backend_auth' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
+                        grep 'ravikishans/streamingapp:backend_stream' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
                     """
                 }
             }
@@ -96,9 +96,9 @@ pipeline {
             steps {
                 script {
                     sh """
-                        sed -i "s|frontend-image-tag|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
-                        sed -i "s|backend-auth-image-tag|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
-                        sed -i "s|backend-stream-image-tag|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
+                        sed -i "s|ravikishans/streamingapp:frontend|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
+                        sed -i "s|ravikishans/streamingapp:backend_auth|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
+                        sed -i "s|ravikishans/streamingapp:backend_stream|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
                     """
                 }
             }
