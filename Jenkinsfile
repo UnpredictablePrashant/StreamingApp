@@ -9,7 +9,7 @@ pipeline {
         EKS_CLUSTER_NAME = "streamingapp-eks-cluster"
         ARGOCD_SERVER= "https://a14e8200912ca401db17b015634f9a1b-715262143.ap-south-1.elb.amazonaws.com/applications/argocd/streamingapp?resource=&view=network"
         ARGOCD_APP_NAME= "streamingapp"
-
+        BRANCH= "main"
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
     }
@@ -206,6 +206,16 @@ pipeline {
         }
         failure {
             echo "Pipeline failed"
+        }
+        always {
+            echo "Post-pipeline cleanup or notifications"
+            script {
+                // Clean up Docker resources only if it's the 'main' branch
+                if (env.BRANCH == 'main') {
+                    echo 'Cleaning up Docker resources on the main branch'
+                    sh 'docker system prune -f'  // This removes unused Docker containers, images, networks, and volumes
+                }
+            }
         }
     }
 }
