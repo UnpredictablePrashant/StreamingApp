@@ -9,4 +9,4 @@ spec:
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/data/mongo" # You can change this if using a cloud-based volume
+    path: "/data/mongo" 

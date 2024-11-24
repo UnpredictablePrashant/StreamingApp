@@ -7,6 +7,11 @@ pipeline {
         DOCKER_CREDENTIALS = credentials('ravikishans')
         EKS_CLUSTER_NAME = "streamingapp-eks-cluster"
         
+        ARGOCD_SERVER= "https://a14e8200912ca401db17b015634f9a1b-715262143.ap-south-1.elb.amazonaws.com/login"
+        ARGOCD_APP_NAME= "streamingapp"
+        ARGOCD_CREDENTIALS = credentials('argocd-admin')
+        BRANCH= "main"
+
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
     }
@@ -125,6 +130,40 @@ pipeline {
             }
         }
 
+        stage('ArgoCD Login') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'argocd-admin', usernameVariable: 'ARGOCD_USERNAME', passwordVariable: 'ARGOCD_PASSWORD')]) {
+                        sh """
+                        # Login to ArgoCD
+                        argocd login ${ARGOCD_SERVER} --username ${ARGOCD_USERNAME} --password ${ARGOCD_PASSWORD} --insecure
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Sync ArgoCD Application') {
+            steps {
+                script {
+                    sh """
+                    # Synchronize the application
+                    argocd app sync ${ARGOCD_APP_NAME}
+                    """
+                }
+            }
+        }
+
+        stage('Verify ArgoCD Application Sync') {
+            steps {
+                script {
+                    sh """
+                    # Check ArgoCD app status
+                    argocd app get ${ARGOCD_APP_NAME}
+                    """
+                }
+            }
+        }
         
 
         stage('verify deployment') {
