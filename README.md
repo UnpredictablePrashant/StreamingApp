@@ -1,6 +1,10 @@
 # StreamingApp
 Collaborative Streaming application
 
+```sh
+screenshots and readme.md is in screenshot folder
+
+```
 ## Backend
 
 ### AuthService
@@ -16,7 +20,3 @@ AWS_REGION='ap-south-1'
 AWS_S3_BUCKET='streamingappservice'
 ```
 
-```sh
-screenshots and readme.md is in screenshot folder
-
-```
