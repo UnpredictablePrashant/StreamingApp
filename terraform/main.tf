@@ -160,6 +160,12 @@ resource "aws_security_group" "security_groups" {
     cidr_blocks = [ "0.0.0.0/0" ]
   }
   ingress {
+    from_port = 9090
+    to_port = 9090
+    protocol = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+  ingress {
     from_port = 27017
     to_port = 27017
     protocol = "tcp"
@@ -286,4 +292,18 @@ resource "aws_iam_role_policy_attachment" "ec2_container_registry_attachment" {
 #     Name = "${var.project}-vpc-stack"
 #   }
 # }
+
+resource "aws_instance" "monitoring" {
+  ami                    = var.aws_ami
+  instance_type          = var.instance_type
+  key_name               = "publicVPC"
+  subnet_id              = aws_subnet.public_subnet[1].id
+  vpc_security_group_ids = [aws_security_group.security_groups.id]
+
+  tags = {
+    Name = "${var.project}-monitoring"
+  }
+
+  # user_data = file("run.sh")
+}
 

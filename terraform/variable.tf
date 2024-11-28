@@ -38,3 +38,13 @@ variable "az" {
 #   description = "EC2 Instance Type"
 #   default     = "t3.micro"
 # }
+
+variable "aws_ami" {
+  description = "this will tell aws ami for ubuntu"
+  type = string
+  default = "ami-0dee22c13ea7a9a67"
+}
+variable "instance_type" {
+  description = "EC2 Instance Type"
+  default     = "t3.micro"
+}
