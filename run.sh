@@ -7,6 +7,7 @@ REMOTE_DEST="/home/ubuntu"                # Destination on the remote instance
 ANSIBLE_HOSTS_FILE="/mnt/c/Users/Ravik/Desktop/CapstoneProj/ansible/hosts.ini"     # Update this path to your hosts.ini file
 PEM_FILE="/home/ravikishans/publicVPC.pem"                   # Update this to your PEM file path
 ANSIBLE_PLAYBOOK="/mnt/c/Users/Ravik/Desktop/CapstoneProj/ansible/playbook.yml"
+
 # # Step 1: Run Terraform provisioning
 cd $TERRAFORM_DIR
 terraform init
