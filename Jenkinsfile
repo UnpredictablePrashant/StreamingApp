@@ -87,8 +87,8 @@ pipeline {
                         $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
                     ]]) {
                         sh """
-                        cd terrafrom
-                        terrafrom output
+                        cd ./terraform
+                        terraform output
                         """
                     }
                 }
