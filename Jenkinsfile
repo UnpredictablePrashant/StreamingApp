@@ -14,7 +14,7 @@ pipeline {
 
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
-        FRONTEND_APP_PATH = './frontend/src/app.js'
+        FRONTEND_APP_PATH = './frontend/src/App.js'
     }
 
     stages {
