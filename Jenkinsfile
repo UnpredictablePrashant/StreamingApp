@@ -102,7 +102,7 @@ pipeline {
                         grep 'ravikishans/streamingapp:frontend' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
                         grep 'ravikishans/streamingapp:backend_auth' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
                         grep 'ravikishans/streamingapp:backend_stream' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
-                        grep 'localhost:3002/streaming' $(FRONTEND_APP_PATH) || echo 'Placeholder not found'
+                        grep 'localhost:3002/streaming' ${FRONTEND_APP_PATH} || echo 'Placeholder not found'
                     """
                 }
             }
