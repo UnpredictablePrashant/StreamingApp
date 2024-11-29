@@ -66,19 +66,6 @@ pipeline {
                 }
             }
         }
-        stage('terraform and ansible') {
-            steps {
-                script {
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
-                    ]]) {
-                        sh """
-                        bash run.sh
-                        """
-                    }
-                }
-            }
-        }
 
         stage('terraform output') {
             steps {
@@ -160,37 +147,49 @@ pipeline {
             }
         }
 
-        stage('ArgoCD') {
+        stage('Extract External IP from Helm Chart') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'argocd-admin', usernameVariable: 'ARGOCD_USERNAME', passwordVariable: 'ARGOCD_PASSWORD')]) {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        def externalIP = sh(
+                            script: """
+                            kubectl get svc -n bestream -o jsonpath='{.items[?(@.metadata.name=="${HELM_RELEASE_NAME}")].status.loadBalancer.ingress[0].ip}'
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        if (!externalIP) {
+                            error("Failed to fetch external IP from Kubernetes service.")
+                        }
+
+                        // Print the extracted IP for debugging
+                        echo "External IP extracted: ${externalIP}"
+
+                        // Update the placeholder in the frontend source code
                         sh """
-                        # Create the ArgoCD namespace
-                        kubectl create namespace argocd || echo "Namespace already exists"
-
-                        # Install ArgoCD using the official manifests
-                        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-
-                        # Patch the ArgoCD server service to use a LoadBalancer
-                        kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
-
-                        # Retrieve the initial admin password
-                        admin_password=\$(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 --decode)
-
-                        # Log in to ArgoCD CLI
-                        argocd login --insecure --username admin --password \$admin_password --grpc-web --server "\$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
-
-                        # Change the admin password
-                        argocd account update-password --current-password \$admin_password --new-password "$ARGOCD_PASSWORD"
-
-                        #update application.yaml
-                        cd ./k8s
-                        kubectl apply -f application.yaml
+                        sed -i "s|localhost:3002/streaming|${externalIP}:3002/streaming|g" ${FRONTEND_APP_PATH}
                         """
                     }
                 }
             }
         }
+
+        stage('helm deploy with update frontend') {
+            steps {
+                script{ 
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace
+                        """
+                    }
+                }    
+            }
+        }
+
 
 
         stage('ArgoCD Login') {
