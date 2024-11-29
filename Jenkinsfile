@@ -80,7 +80,7 @@ pipeline {
             }
         }
 
-        stage('terraform and ansible') {
+        stage('terraform output') {
             steps {
                 script {
                     withCredentials([[
