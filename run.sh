@@ -11,8 +11,8 @@ ANSIBLE_PLAYBOOK="/mnt/c/Users/Ravik/Desktop/CapstoneProj/ansible/playbook.yml"
 # # Step 1: Run Terraform provisioning
 cd $TERRAFORM_DIR
 terraform init
-terraform plan
-terraform apply -auto-approve
+# terraform plan
+# terraform apply -auto-approve
 terraform output
 
 # Step 2: Get instance details (adjust depending on your output variables)

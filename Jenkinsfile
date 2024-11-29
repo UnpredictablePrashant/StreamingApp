@@ -66,6 +66,34 @@ pipeline {
                 }
             }
         }
+        stage('terraform and ansible') {
+            steps {
+                script {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        bash run.sh
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('terraform and ansible') {
+            steps {
+                script {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        cd terrafrom
+                        terrafrom output
+                        """
+                    }
+                }
+            }
+        }
 
         stage('Validate Placeholders in Helm Chart') {
             steps {
@@ -88,7 +116,6 @@ pipeline {
                         sed -i "s|ravikishans/streamingapp:backend_auth|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
                         sed -i "s|ravikishans/streamingapp:backend_stream|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
                         sed -i "s|mongo:latest|${ECR_REPO_PREFIX}:mongo|g" ${HELM_CHART_PATH}/values.yaml
-                        sed -i "s|localhost:3002/streaming|public_ip_monitoring=$(terraform output -raw)
                     """
                 }
             }
