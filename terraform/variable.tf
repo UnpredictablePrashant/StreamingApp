@@ -1,6 +1,7 @@
 variable "project" {
   description = "streaming-app"
   type = string
+  default = "streamingapp"
 }
 
 
@@ -8,7 +9,6 @@ variable "aws_region" {
   description = "this will define the aws region"
   type = string
   default = "ap-south-1"
-
 }
 
 

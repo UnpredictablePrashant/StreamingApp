@@ -160,6 +160,39 @@ pipeline {
             }
         }
 
+        stage('ArgoCD') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'argocd-admin', usernameVariable: 'ARGOCD_USERNAME', passwordVariable: 'ARGOCD_PASSWORD')]) {
+                        sh """
+                        # Create the ArgoCD namespace
+                        kubectl create namespace argocd || echo "Namespace already exists"
+
+                        # Install ArgoCD using the official manifests
+                        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+                        # Patch the ArgoCD server service to use a LoadBalancer
+                        kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+                        # Retrieve the initial admin password
+                        admin_password=\$(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 --decode)
+
+                        # Log in to ArgoCD CLI
+                        argocd login --insecure --username admin --password \$admin_password --grpc-web --server "\$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
+
+                        # Change the admin password
+                        argocd account update-password --current-password \$admin_password --new-password "$ARGOCD_PASSWORD"
+
+                        #update application.yaml
+                        cd ./k8s
+                        kubectl apply -f application.yaml
+                        """
+                    }
+                }
+            }
+        }
+
+
         stage('ArgoCD Login') {
             steps {
                 script {

@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # Variables
-TERRAFORM_DIR="/mnt/c/Users/Ravik/Desktop/CapstoneProj/terraform"          # Update this path to your Terraform directory
+# TERRAFORM_DIR="/mnt/c/Users/Ravik/Desktop/CapstoneProj/terraform"          # Update this path to your Terraform directory
+TERRAFORM_DIR="./CapstoneProj/terraform"
 LOCAL_FILE="/home/ravikishans/publicVPC.pem"            # Update this path to the local file to copy
 REMOTE_DEST="/home/ubuntu"                # Destination on the remote instance
-ANSIBLE_HOSTS_FILE="/mnt/c/Users/Ravik/Desktop/CapstoneProj/ansible/hosts.ini"     # Update this path to your hosts.ini file
+ANSIBLE_HOSTS_FILE="./CapstoneProj/ansible/hosts.ini"     # Update this path to your hosts.ini file
 PEM_FILE="/home/ravikishans/publicVPC.pem"                   # Update this to your PEM file path
-ANSIBLE_PLAYBOOK="/mnt/c/Users/Ravik/Desktop/CapstoneProj/ansible/playbook.yml"
+ANSIBLE_PLAYBOOK="./CapstoneProj/ansible/playbook.yml"
 
 # # Step 1: Run Terraform provisioning
 cd $TERRAFORM_DIR
