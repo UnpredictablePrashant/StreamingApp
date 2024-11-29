@@ -14,6 +14,7 @@ pipeline {
 
         HELM_RELEASE_NAME = "streamingapp"
         HELM_CHART_PATH = './k8s/streamingapp' // Path to Helm chart
+        FRONTEND_APP_PATH = './frontend/src/app.js'
     }
 
     stages {
@@ -73,6 +74,7 @@ pipeline {
                         grep 'ravikishans/streamingapp:frontend' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
                         grep 'ravikishans/streamingapp:backend_auth' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
                         grep 'ravikishans/streamingapp:backend_stream' ${HELM_CHART_PATH}/values.yaml || echo 'Placeholder not found!'
+                        grep 'localhost:3002/streaming' $(FRONTEND_APP_PATH) || echo 'Placeholder not found'
                     """
                 }
             }
@@ -86,6 +88,7 @@ pipeline {
                         sed -i "s|ravikishans/streamingapp:backend_auth|${ECR_REPO_PREFIX}:backend_auth|g" ${HELM_CHART_PATH}/values.yaml
                         sed -i "s|ravikishans/streamingapp:backend_stream|${ECR_REPO_PREFIX}:backend_stream|g" ${HELM_CHART_PATH}/values.yaml
                         sed -i "s|mongo:latest|${ECR_REPO_PREFIX}:mongo|g" ${HELM_CHART_PATH}/values.yaml
+                        sed -i "s|localhost:3002/streaming|public_ip_monitoring=$(terraform output -raw)
                     """
                 }
             }
