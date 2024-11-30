@@ -5,3 +5,5 @@ terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 kubeconfig
 .Jenkinsfile3
+./run.sh
+./ansible
