@@ -188,7 +188,7 @@ pipeline {
 
                         # Build Docker images
                         cd ./frontend
-                        docker build -t ravikishans/streamingapp:frontend
+                        docker build -t ravikishans/streamingapp:frontend .
                     """
                     }
                 }
