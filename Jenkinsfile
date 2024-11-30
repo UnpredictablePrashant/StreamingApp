@@ -7,7 +7,7 @@ pipeline {
         DOCKER_CREDENTIALS = credentials('ravikishans')
         EKS_CLUSTER_NAME = "streamingapp-eks-cluster"
         
-        ARGOCD_SERVER= "a14e8200912ca401db17b015634f9a1b-715262143.ap-south-1.elb.amazonaws.com"
+        ARGOCD_SERVER= "aa74ee1d4cb334867ad56041ea285424-1171620881.ap-south-1.elb.amazonaws.com"
         ARGOCD_APP_NAME= "streamingapp"
         ARGOCD_CREDENTIALS = credentials('argocd-admin')
         BRANCH= "main"

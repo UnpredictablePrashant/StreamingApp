@@ -293,17 +293,3 @@ resource "aws_iam_role_policy_attachment" "ec2_container_registry_attachment" {
 #   }
 # }
 
-resource "aws_instance" "monitoring" {
-  ami                    = var.aws_ami
-  instance_type          = var.instance_type
-  key_name               = "publicVPC"
-  subnet_id              = aws_subnet.public_subnet[1].id
-  vpc_security_group_ids = [aws_security_group.security_groups.id]
-
-  tags = {
-    Name = "${var.project}-monitoring"
-  }
-
-  # user_data = file("run.sh")
-}
-

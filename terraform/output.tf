@@ -20,10 +20,6 @@ output "elastic_ip" {
   description = "the public ip of elastic ip"
 }
 
-output "instance_public_ip_monitoring" {
-  description = "Public IP of the monitoring EC2 instance"
-  value       = aws_instance.monitoring.public_ip
-}
 
 # Output the Cluster Information
 output "eks_cluster_endpoint" {
