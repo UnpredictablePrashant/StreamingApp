@@ -42,7 +42,7 @@ pipeline {
             }
         }
 
-        stage('push & tag images') {
+        stage('tag & push images') {
             steps {
                 script{ 
                     withCredentials([[
@@ -172,6 +172,52 @@ pipeline {
                         sed -i "s|localhost:3002/streaming|${externalIP}:3002/streaming|g" ${FRONTEND_APP_PATH}
                         """
                     }
+                }
+            }
+        }
+
+        stage('update Docker Images') {
+            steps {
+                script {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        # Authenticate Docker to ECR public
+                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d1k1o6n7
+
+                        # Build Docker images
+                        cd ./frontend
+                        docker build -t ravikishans/streamingapp:frontend
+                    """
+                    }
+                }
+            }
+        }
+
+        stage('tag & push updated images') {
+            steps {
+                script{ 
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                    ]]) {
+                        sh """
+                        # Tag images for ECR
+                        docker tag ravikishans/streamingapp:frontend ${ECR_REPO_PREFIX}:frontend
+                        # Push images to ECR
+                        docker push ${ECR_REPO_PREFIX}:frontend
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Update again Helm Chart with ECR Image Tags') {
+            steps {
+                script {
+                    sh """
+                        sed -i "s|ravikishans/streamingapp:frontend|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
+                    """
                 }
             }
         }
