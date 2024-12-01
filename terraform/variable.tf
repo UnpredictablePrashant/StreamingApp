@@ -8,7 +8,7 @@ variable "project" {
 variable "aws_region" {
   description = "this will define the aws region"
   type = string
-  default = "ap-south-1"
+  default = "ap-northeast-3"
 }
 
 
@@ -31,7 +31,7 @@ variable "az" {
   description = "List of az"
   type = list(string)
 
-  default = [ "ap-south-1a", "ap-south-1b" ]
+  default = [ "ap-northeast-3a", "ap-northeast-3b" ]
 }
 
 # variable "instance_type" {
@@ -42,7 +42,7 @@ variable "az" {
 variable "aws_ami" {
   description = "this will tell aws ami for ubuntu"
   type = string
-  default = "ami-0dee22c13ea7a9a67"
+  default = "ami-0206f4f885421736f"
 }
 variable "instance_type" {
   description = "EC2 Instance Type"

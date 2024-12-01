@@ -10,3 +10,17 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/data/mongo" 
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: vault-pv
+  namespace: vault
+spec:
+  capacity:
+    storage: {{ .Values.database.spec.capacity.storage }}
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/data/auth"

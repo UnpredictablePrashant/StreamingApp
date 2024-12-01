@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'ap-south-1'
-        ECR_REPO_PREFIX = 'public.ecr.aws/d1k1o6n7/streamingapp' // Replace with your public ECR repository
+        AWS_REGION = 'ap-northeast-3'
+        ECR_REPO_PREFIX = 'public.ecr.aws/f8g8h5d4/shrutika-capstoneproject' // Replace with your public ECR repository
         DOCKER_CREDENTIALS = credentials('ravikishans')
         EKS_CLUSTER_NAME = "streamingapp-eks-cluster"
         
@@ -32,7 +32,7 @@ pipeline {
                     ]]) {
                         sh """
                         # Authenticate Docker to ECR public
-                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d1k1o6n7
+                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/f8g8h5d4
 
                         # Build Docker images
                         docker compose build
@@ -61,21 +61,6 @@ pipeline {
                         docker push ${ECR_REPO_PREFIX}:backend_stream
                         docker push ${ECR_REPO_PREFIX}:mongo
                         docker push ${ECR_REPO_PREFIX}:mongo-express
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('terraform output') {
-            steps {
-                script {
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
-                    ]]) {
-                        sh """
-                        cd ./terraform
-                        terraform output
                         """
                     }
                 }
@@ -184,7 +169,7 @@ pipeline {
                     ]]) {
                         sh """
                         # Authenticate Docker to ECR public
-                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d1k1o6n7
+                        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/f8g8h5d4
 
                         # Build Docker images
                         cd ./frontend

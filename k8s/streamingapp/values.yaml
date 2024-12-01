@@ -1,5 +1,11 @@
 database:
   namespace: db
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "mongo-role" # Role for MongoDB access
+    vault.hashicorp.com/agent-inject-secret-MONGO_INITDB_ROOT_USERNAME: "secret/data/auth#MONGO_INITDB_ROOT_USERNAME"
+    vault.hashicorp.com/agent-inject-secret-MONGO_INITDB_ROOT_PASSWORD: "secret/data/auth#MONGO_INITDB_ROOT_PASSWORD"
+    vault.hashicorp.com/agent-inject-secret-MONGO_URI: "secret/data/auth#MONGO_URI"
   labels:
     app: mongo
   replicas: 1
@@ -10,8 +16,8 @@ database:
       ports:
         containerPort: 27017
       env:
-        MONGO_INITDB_ROOT_USERNAME: "root"
-        MONGO_INITDB_ROOT_PASSWORD: "example"
+        MONGO_INITDB_ROOT_USERNAME: "vault:secret/data/auth#MONGO_INITDB_ROOT_USERNAME"
+        MONGO_INITDB_ROOT_PASSWORD: "vault:secret/data/auth#MONGO_INITDB_ROOT_PASSWORD"
       volumeMounts:
         name: mongo-storage
         mountPath: /data/db
@@ -28,6 +34,11 @@ database:
 
 auth_service:
   namespace: beauth
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "auth-service-role" # Role for the auth service
+    # vault.hashicorp.com/agent-inject-secret-JWT_SECRET: "secret/data/auth#JWT_SECRET"
+    vault.hashicorp.com/agent-inject-secret-MONGO_URI: "secret/data/auth#MONGO_URI"
   labels:
     app: auth-backend
   replicas: 1
@@ -38,13 +49,7 @@ auth_service:
       ports:
         containerPort: 3001
       env:
-        MONGO_URI: "mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin"
-        # mongodb://root:example@mongo.<namespace>.svc.cluster.local:27017/admin
-        # JWT_SECRET:
-        # AWS_KEY_ID:
-        # AWS_SECRET_KEY:
-        # AWS_REGION: "ap-northeast-2"
-        # AWS_S3_BUCKET: "rakshi2502"
+        MONGO_URI: "vault:secret/data/auth#MONGO_URI"
   ports:
     protocol: TCP
     port: 3001
@@ -52,6 +57,11 @@ auth_service:
 
 streaming_service:
   namespace: bestream
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "stream-service-role" # Role for the streaming service
+    # vault.hashicorp.com/agent-inject-secret-JWT_SECRET: "secret/data/auth#JWT_SECRET"
+    vault.hashicorp.com/agent-inject-secret-MONGO_URI: "secret/data/auth#MONGO_URI"
   labels:
     app: auth-backend
   replicas: 1
@@ -62,7 +72,7 @@ streaming_service:
       ports:
         containerPort: 3002
       env:
-        MONGO_URI: "mongodb://root:example@mongo-svc.db.svc.cluster.local:27017/admin"
+        MONGO_URI: "vault:secret/data/auth#MONGO_URI"
         # JWT_SECRET:
         # AWS_KEY_ID:
         # AWS_SECRET_KEY:
@@ -91,3 +101,11 @@ frontend:
   data:
     AWS_IP: "0.0.0.0"
     STREAM_PORT: "3002"
+
+vault:
+  namespace: vault
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "vault-role"
+  data:
+    VAULT_TOKEN: "vault-token-secret"

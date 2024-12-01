@@ -9,3 +9,16 @@ spec:
   resources:
     requests:
       storage: {{ .Values.database.spec.capacity.storage }}
+
+---
+ apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vault-pvc
+  namespace: vault
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.database.spec.capacity.storage }}
