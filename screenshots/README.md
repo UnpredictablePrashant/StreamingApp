@@ -10,7 +10,7 @@ This project aims to create a secure DevOps pipeline by leveraging GitOps princi
 - **Provision Infrastructure**: Use Terraform to automate AWS infrastructure provisioning, including an EKS cluster.
 - **Set Up EKS**: Create a Kubernetes cluster on EKS for deploying containerized applications.
 - **Version Control**: Ensure that all infrastructure and application changes are tracked and managed using version control, specifically Git.
-- **Secrets Management**: Use Jenkins credentials to manage sensitive information like API keys and passwords securely.
+- **Secrets Management**: HashiCorp Vault will be used to securely manage secrets and sensitive data in the deployment pipeline.
 
 ## Tools Used
 
@@ -20,6 +20,8 @@ This project aims to create a secure DevOps pipeline by leveraging GitOps princi
   - Kubernetes: A container orchestration platform for automating deployment, scaling, and management of containerized applications.
 - **Version Control**:
   - GitHub : Version control systems used to store and manage application and infrastructure code.
+- **HashiCorp Vault**: 
+  - A secrets management tool used to securely store and access secrets, such as API keys and passwords, in the pipeline.  
 - **CI/CD**:
   - Jenkins : Continuous integration and continuous delivery tools to automate testing and deployment processes.
 - **Terraform**:
@@ -33,6 +35,7 @@ This project aims to create a secure DevOps pipeline by leveraging GitOps princi
 - **Terraform** installed
 - **ArgoCD** or **Flux** for GitOps setup
 - **Jenkins** for CI/CD pipeline
+- **vault** (for secrets management)
 
 
 ## Getting Started
@@ -46,9 +49,6 @@ Run Terraform commands to provision resources:
 ```bash
 # Initialize Terraform
 terraform init
-
-# plan
-terraform plan
 
 # Apply Terraform configuration
 terraform apply
@@ -115,7 +115,53 @@ argocd app sync my-app
 argocd app sync my-app: This command tells ArgoCD to sync the my-app application with the Git repository. It pulls the latest changes from the repository (Kubernetes manifests, application configurations, etc.) and applies them to the Kubernetes cluster.
 
 
-## Conclusion
+### 6. Set up Secrets Management:
+Install and configure HashiCorp Vault on your Kubernetes cluster.
+Store secrets (e.g., API keys, database credentials) securely in Vault.
+Integrate Vault into the CI/CD pipeline to retrieve secrets during deployment securely.
+
+```bash
+helm repo add hashicorp https://helm.releases.hashicorp.com   # Add the HashiCorp Helm repository:
+helm repo update
+
+kubectl create namespace vault    # Create a namespace for Vault:
+kubectl get pods -n vault   # kubectl get pods -n vault
+
+kubectl exec -n vault -it vault-0 -- vault operator init    # nitialize Vault (for production mode): This will return a series of unseal keys and the root token.
+kubectl exec -n vault -it vault-0 -- vault operator unseal <unseal-key>   # Unseal Vault : Use the unseal keys to unseal Vault.
+
+kubectl apply -f secret.yaml    # Create and apply secret.yaml file
+kubectl exec -n vault -it vault-0 -- vault kv get secret/my-secret    # Verify secret storage
+
+```
+Access Secrets from Vault : 
+To access secrets stored in Vault, you need to authenticate and retrieve the secrets programmatically or using kubectl.
+
+```bash
+kubectl exec -n vault -it vault-0 -- vault auth enable kubernetes   # Enable Kubernetes authentication in Vault
+
+kubectl exec -n vault -it vault-0 -- vault write auth/kubernetes/config \   # Create a Kubernetes authentication role for Vault 
+  kubeconfig=/etc/kubernetes/admin.conf
+
+kubectl exec -n vault -it vault-0 -- vault write auth/kubernetes/role/my-role \   # Create a Vault role for accessing secrets
+  bound_service_account_names=vault-sa \
+  bound_service_account_namespaces=vault \
+  policies=my-policy \
+  ttl=1h
+
+kubectl exec -n vault -it vault-0 -- vault kv get secret/my-secret    # After authenticating, you can fetch secrets from Vault using the vault CLI or API.
+
+helm install vault hashicorp/vault --namespace vault -f values.yaml   # Install Vault with custom values.yaml
+
+kubectl port-forward -n vault svc/vault 8200:8200   # Once Vault is installed with the UI, port-forward the Vault service
+# Now you can access the Vault UI at http://localhost:8200
+
+```
+Check the Vault configuration and ensure that the correct access policies are in place.
+Ensure that Vault authentication tokens are correctly set up in the CI/CD pipeline.
+
+
+## Conclusion : 
 This project sets up a secure and automated DevOps workflow using GitOps, Terraform, ArgoCD, AWS EKS, Jenkins, and HashiCorp Vault. By following this workflow, you ensure that all infrastructure and application changes are tracked, managed, and securely deployed with minimal manual intervention.
 
 
