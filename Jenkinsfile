@@ -208,29 +208,58 @@ pipeline {
             }
         }
 
-        stage('helm deploy with update frontend') {
+        // stage('helm deploy with update frontend') {
+        //     steps {
+        //         script{ 
+        //             withCredentials([[
+        //                 $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+        //             ]]) {
+        //                 sh """
+        //                 sed -i "s|ravikishans/streamingapp:frontend|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
+        //                 cat  ${HELM_CHART_PATH}/values.yaml
+        //                 helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace
+        //                 kubectl get pods --all-namespaces
+        //                 kubectl get svc --all-namespaces
+        //                 """
+        //             }
+        //         }    
+        //     }
+        // }
+
+
+
+        // stage('ArgoCD Login, sync and Verify ArgoCD Application Sync ') {
+        //     steps {
+        //         script {
+        //             withCredentials([usernamePassword(credentialsId: 'argocd-admin', usernameVariable: 'ARGOCD_USERNAME', passwordVariable: 'ARGOCD_PASSWORD')]) {
+        //                 sh """
+        //                 # Login to ArgoCD
+        //                 argocd login ${ARGOCD_SERVER} --username ${ARGOCD_USERNAME} --password ${ARGOCD_PASSWORD} --insecure
+        //                 argocd app sync ${ARGOCD_APP_NAME}
+        //                 argocd app get ${ARGOCD_APP_NAME}
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
+
+        stage('Deploy with Helm and Sync with ArgoCD') {
             steps {
-                script{ 
+                script { 
+                    // Step 1: Helm deploy with update to frontend
                     withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
+                        $class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws_credentials'
                     ]]) {
                         sh """
                         sed -i "s|ravikishans/streamingapp:frontend|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
-                        cat  ${HELM_CHART_PATH}/values.yaml
+                        cat ${HELM_CHART_PATH}/values.yaml
                         helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace
                         kubectl get pods --all-namespaces
                         kubectl get svc --all-namespaces
                         """
                     }
-                }    
-            }
-        }
-
-
-
-        stage('ArgoCD Login, sync and Verify ArgoCD Application Sync ') {
-            steps {
-                script {
+                    
+                    // Step 2: ArgoCD Login, sync and verify
                     withCredentials([usernamePassword(credentialsId: 'argocd-admin', usernameVariable: 'ARGOCD_USERNAME', passwordVariable: 'ARGOCD_PASSWORD')]) {
                         sh """
                         # Login to ArgoCD
@@ -242,6 +271,7 @@ pipeline {
                 }
             }
         }
+
         
 
         stage('verify deployment') {
