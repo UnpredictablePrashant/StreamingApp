@@ -155,6 +155,7 @@ pipeline {
                         // Update the placeholder in the frontend source code
                         sh """
                         sed -i "s|localhost:3002/streaming|${externalIP}:3002/streaming|g" ${FRONTEND_APP_PATH}
+                        cat ${FRONTEND_APP_PATH}
                         """
                     }
                 }
