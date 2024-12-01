@@ -1,0 +1,6 @@
+[91mError writing data to auth/kubernetes/role/mongo-role: Error making API request.
+
+URL: PUT http://127.0.0.1:8200/v1/auth/kubernetes/role/mongo-role
+Code: 400. Errors:
+
+* "bound_service_account_names" can not be empty[0m
