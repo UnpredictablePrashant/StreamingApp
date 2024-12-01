@@ -281,6 +281,7 @@ pipeline {
                         $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
                     ]]) {
                         sh """
+                        cat ${HELM_CHART_PATH}/values.yaml
                         kubectl get pods --all-namespaces
                         kubectl get svc --all-namespaces
                         """
