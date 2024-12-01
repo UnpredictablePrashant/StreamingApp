@@ -11,7 +11,7 @@ spec:
     path: k8s/streamingapp
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: streamingapp
   syncPolicy:
     automated:
       prune: true
