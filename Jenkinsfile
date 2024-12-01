@@ -203,7 +203,6 @@ pipeline {
                 script {
                     sh """
                         sed -i "s|ravikishans/streamingapp:frontend|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
-                        cat  ${HELM_CHART_PATH}/values.yaml
                     """
                 }
             }
@@ -216,6 +215,8 @@ pipeline {
                         $class: 'AmazonWebServicesCredentialsBinding',credentialsId: 'aws_credentials'
                     ]]) {
                         sh """
+                        sed -i "s|ravikishans/streamingapp:frontend|${ECR_REPO_PREFIX}:frontend|g" ${HELM_CHART_PATH}/values.yaml
+                        cat  ${HELM_CHART_PATH}/values.yaml
                         helm upgrade --install ${HELM_RELEASE_NAME} ${HELM_CHART_PATH} --namespace default --create-namespace
                         kubectl get pods --all-namespaces
                         kubectl get svc --all-namespaces
