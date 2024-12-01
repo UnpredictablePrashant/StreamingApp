@@ -1,3 +1,14 @@
+injector:
+  enabled: true
+  # Optionally configure the Vault address and service account
+  vault:
+    address: "http://a7a963d65a6ce468bba1f4d3a9bcc8cb-183905259.ap-northeast-3.elb.amazonaws.com:8200"
+  # Optionally specify the default role for Vault Agent Injector
+  agent:
+    # You can configure the vault agent behavior here
+    config:
+      exit_after_auth: false
+
 database:
   namespace: db
   annotations:
