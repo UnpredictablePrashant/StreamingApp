@@ -140,7 +140,7 @@ pipeline {
                     ]]) {
                         def externalIP = sh(
                             script: """
-                            kubectl get svc -n bestream -o jsonpath='{.items[?(@.metadata.name=="${HELM_RELEASE_NAME}")].status.loadBalancer.ingress[0].ip}'
+                            kubectl get svc -n bestream -o jsonpath='{.items[?(@.metadata.name=="stream-backend-svc")].status.loadBalancer.ingress[0].ip}'
                             """,
                             returnStdout: true
                         ).trim()

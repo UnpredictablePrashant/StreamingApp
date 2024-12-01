@@ -3,6 +3,12 @@ kind: Deployment
 metadata:
   name: mongo-deployment
   namespace: {{ .Values.database.namespace }}
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "mongo-role" # Role for MongoDB access
+    vault.hashicorp.com/agent-inject-secret-MONGO_INITDB_ROOT_USERNAME: "secret/data/auth#MONGO_INITDB_ROOT_USERNAME"
+    vault.hashicorp.com/agent-inject-secret-MONGO_INITDB_ROOT_PASSWORD: "secret/data/auth#MONGO_INITDB_ROOT_PASSWORD"
+    vault.hashicorp.com/agent-inject-secret-MONGO_URI: "secret/data/auth#MONGO_URI"
   labels:
     app: {{ .Values.database.labels.app }}
 spec:
@@ -71,6 +77,11 @@ kind: Deployment
 metadata:
   name: auth-backend-deployment
   namespace: {{ .Values.auth_service.namespace }}
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "auth-service-role" # Role for the auth service
+    # vault.hashicorp.com/agent-inject-secret-JWT_SECRET: "secret/data/auth#JWT_SECRET"
+    vault.hashicorp.com/agent-inject-secret-MONGO_URI: "secret/data/auth#MONGO_URI"
   labels:
     app: {{ .Values.auth_service.labels.app }}
 spec:
@@ -123,6 +134,11 @@ kind: Deployment
 metadata:
   name: stream-backend-deployment
   namespace: {{ .Values.streaming_service.namespace }}
+  annotations:
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "auth-service-role" # Role for the auth service
+    # vault.hashicorp.com/agent-inject-secret-JWT_SECRET: "secret/data/auth#JWT_SECRET"
+    vault.hashicorp.com/agent-inject-secret-MONGO_URI: "secret/data/auth#MONGO_URI"
   labels:
     app: {{ .Values.streaming_service.labels.app }}
 spec:

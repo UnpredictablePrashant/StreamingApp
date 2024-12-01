@@ -16,8 +16,8 @@ database:
       ports:
         containerPort: 27017
       env:
-        MONGO_INITDB_ROOT_USERNAME: "vault:secret/data/auth#MONGO_INITDB_ROOT_USERNAME"
-        MONGO_INITDB_ROOT_PASSWORD: "vault:secret/data/auth#MONGO_INITDB_ROOT_PASSWORD"
+        MONGO_INITDB_ROOT_USERNAME: "MONGO_INITDB_ROOT_USERNAME"
+        MONGO_INITDB_ROOT_PASSWORD: "MONGO_INITDB_ROOT_PASSWORD"
       volumeMounts:
         name: mongo-storage
         mountPath: /data/db
@@ -49,7 +49,7 @@ auth_service:
       ports:
         containerPort: 3001
       env:
-        MONGO_URI: "vault:secret/data/auth#MONGO_URI"
+        MONGO_URI: "MONGO_URI"
   ports:
     protocol: TCP
     port: 3001
@@ -72,7 +72,7 @@ streaming_service:
       ports:
         containerPort: 3002
       env:
-        MONGO_URI: "vault:secret/data/auth#MONGO_URI"
+        MONGO_URI: "MONGO_URI"
         # JWT_SECRET:
         # AWS_KEY_ID:
         # AWS_SECRET_KEY:
