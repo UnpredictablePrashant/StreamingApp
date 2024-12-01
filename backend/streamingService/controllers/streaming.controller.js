@@ -68,7 +68,7 @@ const streamingVideo = async (req, res) => {
         }
     } else {
         // Streaming from local file system
-        const videoPath = path.join(__dirname, 'streamingService', 'controllers', 'theNight.mp4'); // Adjust the path to your setup
+        const videoPath = path.join(__dirname, 'streamingService', 'controllers', 'theNights.mp4'); // Adjust the path to your setup
         const videoStats = fs.statSync(videoPath);
         const videoSize = videoStats.size;
 
