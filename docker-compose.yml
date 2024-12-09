@@ -1,0 +1,84 @@
+version: '3.1'
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    healthcheck:
+      test: "echo 'db.adminCommand({ ping: 1 })' | mongo --quiet"
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - mongo_data:/data/db
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8090:8081
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "root"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "example"
+      ME_CONFIG_MONGODB_URL: "mongodb://root:example@mongo:27017/admin"
+      ME_CONFIG_BASICAUTH: "false"
+
+  streaming-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ravikishans/streamingapp:frontend
+    container_name: streaming-frontend
+    environment:
+      AWS_IP: "0.0.0.0"
+      STREAM_PORT: 3002
+    ports:
+      - "3000:3000"
+    # networks:
+    #   - streaming_network
+
+  auth-backend:
+    build:
+      context: ./backend/authService
+      dockerfile: Dockerfile
+    image: ravikishans/streamingapp:backend_auth
+    container_name: authentication-backend
+    environment:
+      MONGO_URI: "mongodb://root:example@mongo:27017/admin"
+      PORT: 3001
+      AWS_SDK_LOAD_CONFIG: 1
+      AWS_REGION: 'ap-northeast-2'
+      AWS_S3_BUCKET: 'rakshi2502'
+    ports:
+      - "3001:3001"
+    # networks:
+    #   - streaming_network
+
+  stream-backend:
+    build:
+      context: ./backend/streamingService
+      dockerfile: Dockerfile
+    image: ravikishans/streamingapp:backend_stream
+    container_name: stream-backend
+    environment:
+      MONGO_URI: "mongodb://root:example@mongo:27017/admin"
+      PORT: 3002
+      AWS_SDK_LOAD_CONFIG: 1
+      AWS_REGION: 'ap-northeast-2'
+      AWS_S3_BUCKET: 'rakshi2502'
+    ports:
+      - "3002:3002"
+    # networks:
+    #   - streaming_network
+
+volumes:
+  mongo_data:
+
+# networks:
+#   streaming_network:
