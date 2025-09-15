@@ -1,8 +1,22 @@
 const express = require('express');
-const routes = express.Router();
+const router = express.Router();
+const {
+  streamVideo,
+  getVideosByGenre,
+  getFeaturedVideos,
+  getVideoDetails
+} = require('../controllers/streaming.controller');
 
-const streamingController = require('../controllers/streaming.controller')
+// Stream video
+router.get('/stream', streamVideo);
 
-routes.get('/', streamingController.streamingVideo)
+// Get videos by genre
+router.get('/videos', getVideosByGenre);
 
-module.exports = routes
+// Get featured videos
+router.get('/videos/featured', getFeaturedVideos);
+
+// Get video details
+router.get('/videos/:videoId', getVideoDetails);
+
+module.exports = router;

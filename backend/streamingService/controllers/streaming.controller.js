@@ -1,66 +1,137 @@
-const express = require("express");
-const app = express();
-const awsSdk = require('aws-sdk');
+const { S3Client, HeadObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { Video } = require('../models/video.model');
 
-// Configure AWS SDK
-const awsS3Bucket = process.env.AWS_S3_BUCKET;
-const awsRegion = process.env.AWS_REGION;
-const awsKey = process.env.AWS_KEY_ID;
-const awsSecret = process.env.AWS_SECRET_KEY;
-
-awsSdk.config.update({
-  accessKeyId: awsKey,
-  secretAccessKey: awsSecret,
-  region: awsRegion
+// Configure S3 Client
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
-const s3 = new awsSdk.S3();
-const videoKey = "theNights.mp4"; // Adjust the path to your video in the S3 bucket
 const CHUNK_SIZE = 10 ** 6; // 1 MB
 
-const streamingVideo = async (req, res) => {
+const streamVideo = async (req, res) => {
+  try {
+    // For now, use the fixed video key since we have one video
+    const videoKey = 'theNights.mp4';
+    
     const range = req.headers.range;
     if (!range) {
-        res.status(400).send("Requires Range header");
-        return;
+      return res.status(400).send("Requires Range header");
     }
 
-    // Fetch the size of the video file from S3
-    const params = {
-        Bucket: awsS3Bucket,
-        Key: videoKey
+    // Get video size from S3
+    const headObjectCommand = new HeadObjectCommand({
+      Bucket: 'streamingappservicepk',
+      Key: videoKey
+    });
+
+    const headObject = await s3Client.send(headObjectCommand);
+    const videoSize = headObject.ContentLength;
+
+    // Parse range
+    const start = Number(range.replace(/\D/g, ""));
+    const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
+    const contentLength = end - start + 1;
+
+    // Set response headers
+    const headers = {
+      "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": contentLength,
+      "Content-Type": "video/mp4",
     };
 
-    try {
-        const headCode = await s3.headObject(params).promise();
-        const videoSize = headCode.ContentLength;
+    res.writeHead(206, headers);
 
-        const start = Number(range.replace(/\D/g, ""));
-        const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
-        const contentLength = end - start + 1;
+    // Stream the video chunk
+    const getObjectCommand = new GetObjectCommand({
+      Bucket: 'streamingappservicepk',
+      Key: video.s3Key,
+      Range: `bytes=${start}-${end}`
+    });
 
-        const headers = {
-            "Content-Range": `bytes ${start}-${end}/${videoSize}`,
-            "Accept-Ranges": "bytes",
-            "Content-Length": contentLength,
-            "Content-Type": "video/mp4",
-        };
-
-        res.writeHead(206, headers);
-
-        // Stream the video directly from S3
-        const streamParams = {
-            Bucket: awsS3Bucket,
-            Key: videoKey,
-            Range: `bytes=${start}-${end}`
-        };
-
-        const videoStream = s3.getObject(streamParams).createReadStream();
-        videoStream.pipe(res);
-    } catch (error) {
-        console.error('Error in fetching video from S3:', error);
-        res.status(500).send('Error in fetching video');
-    }
+    const { Body } = await s3Client.send(getObjectCommand);
+    Body.pipe(res);
+  } catch (error) {
+    console.error('Error streaming video:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error streaming video'
+    });
+  }
 };
 
-module.exports = { streamingVideo };
+const getVideosByGenre = async (req, res) => {
+  try {
+    const videos = await Video.find({ status: 'ready' })
+      .select('title description thumbnailUrl genre releaseYear rating duration isFeatured')
+      .sort('-createdAt');
+
+    res.json({
+      success: true,
+      videos
+    });
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching videos'
+    });
+  }
+};
+
+const getFeaturedVideos = async (req, res) => {
+  try {
+    const videos = await Video.find({ isFeatured: true, status: 'ready' })
+      .select('title description thumbnailUrl genre releaseYear rating duration')
+      .sort('-createdAt')
+      .limit(1);
+
+    res.json({
+      success: true,
+      videos
+    });
+  } catch (error) {
+    console.error('Error fetching featured videos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching featured videos'
+    });
+  }
+};
+
+const getVideoDetails = async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const video = await Video.findById(videoId)
+      .select('-s3Key');
+
+    if (!video) {
+      return res.status(404).json({
+        success: false,
+        message: 'Video not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      video
+    });
+  } catch (error) {
+    console.error('Error fetching video details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching video details'
+    });
+  }
+};
+
+module.exports = {
+  streamVideo,
+  getVideosByGenre,
+  getFeaturedVideos,
+  getVideoDetails
+};
