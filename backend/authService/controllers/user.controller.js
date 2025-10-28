@@ -122,7 +122,7 @@ const userLogin = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Login successful",
+      msg: "Login Successful",
       token,
       user: userData
     });
