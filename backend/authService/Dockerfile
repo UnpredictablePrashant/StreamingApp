@@ -1,7 +1,13 @@
-FROM node:18-alpine
+FROM node:18-alpine AS base
+
 WORKDIR /app
+
+COPY package*.json ./
+RUN npm install --production
+
 COPY . .
-RUN npm install
-COPY . .
+
+ENV NODE_ENV=production
 EXPOSE 3001
-CMD ["node", "index.js"]
+
+CMD ["npm", "run", "start"]

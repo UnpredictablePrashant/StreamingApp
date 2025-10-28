@@ -21,14 +21,45 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#1976d2',
+      main: '#ff4757',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#2f80ed',
     },
     background: {
-      default: '#121212',
-      paper: '#1e1e1e',
+      default: '#050505',
+      paper: '#111111',
+    },
+    text: {
+      primary: '#f9f9f9',
+      secondary: 'rgba(249,249,249,0.72)',
+    },
+  },
+  shape: {
+    borderRadius: 16,
+  },
+  typography: {
+    fontFamily: '"Poppins", "Segoe UI", sans-serif',
+    h1: { fontWeight: 800 },
+    h2: { fontWeight: 700 },
+    h3: { fontWeight: 700 },
+    h4: { fontWeight: 600 },
+    button: { fontWeight: 600 },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 999,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 20,
+        },
+      },
     },
   },
 });

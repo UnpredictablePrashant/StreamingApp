@@ -1,93 +1,113 @@
-import React, { useState } from 'react';
-import { Box, IconButton, Typography } from '@mui/material';
+import React, { useMemo, useState } from 'react';
+import { Box, IconButton, Typography, useMediaQuery } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import { VideoCard } from './VideoCard';
 
-const CarouselContainer = styled(Box)(({ theme }) => ({
+const SectionWrapper = styled(Box)(({ theme }) => ({
   position: 'relative',
-  padding: theme.spacing(2, 4),
-  '&:hover .MuiIconButton-root': {
-    opacity: 1,
-  },
+  paddingInline: theme.spacing(4),
+  paddingBlock: theme.spacing(3),
 }));
 
-const CarouselTrack = styled(Box)(({ theme }) => ({
+const CarouselViewport = styled(Box)(() => ({
+  position: 'relative',
+  overflow: 'hidden',
+}));
+
+const CarouselTrack = styled(Box)(({ translateX }) => ({
   display: 'flex',
-  gap: theme.spacing(2),
-  transition: 'transform 0.5s ease-in-out',
-  overflowX: 'hidden',
+  transform: `translateX(-${translateX}%)`,
+  transition: 'transform 420ms ease',
 }));
 
-const CarouselButton = styled(IconButton)(({ theme }) => ({
+const EdgeFade = styled(Box)(({ theme, position }) => ({
   position: 'absolute',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  color: 'white',
-  opacity: 0,
-  transition: 'opacity 0.3s ease-in-out',
-  '&:hover': {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-  },
+  top: 0,
+  bottom: 0,
+  width: '6rem',
+  pointerEvents: 'none',
   zIndex: 2,
+  [position]: theme.spacing(4),
+  background: `linear-gradient(${position === 'left' ? '90deg' : '270deg'}, ${theme.palette.background.default} 0%, rgba(15,15,15,0) 100%)`,
 }));
 
-export const VideoCarousel = ({ title, videos, onPlay, onInfo }) => {
-  const [startIndex, setStartIndex] = useState(0);
-  const itemsPerPage = 6;
+const ControlButton = styled(IconButton)(({ theme }) => ({
+  position: 'absolute',
+  top: '40%',
+  transform: 'translateY(-50%)',
+  zIndex: 3,
+  backgroundColor: 'rgba(22, 22, 22, 0.75)',
+  backdropFilter: 'blur(6px)',
+  color: theme.palette.common.white,
+  '&:hover': {
+    backgroundColor: 'rgba(22, 22, 22, 0.9)',
+  },
+}));
 
-  const handlePrevious = () => {
-    setStartIndex((prev) => Math.max(0, prev - itemsPerPage));
-  };
+export const VideoCarousel = ({ title, videos = [], onPlay, onInfo }) => {
+  const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.down('sm'));
+  const isSm = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isMd = useMediaQuery(theme.breakpoints.between('md', 'lg'));
 
-  const handleNext = () => {
-    setStartIndex((prev) => 
-      Math.min(prev + itemsPerPage, Math.max(0, videos.length - itemsPerPage))
-    );
-  };
+  const itemsPerPage = useMemo(() => {
+    if (isXs) return 1;
+    if (isSm) return 2;
+    if (isMd) return 4;
+    return 5;
+  }, [isXs, isSm, isMd]);
+
+  const gapPx = 24;
+
+  const [page, setPage] = useState(0);
+  const maxPage = Math.max(0, Math.ceil(videos.length / itemsPerPage) - 1);
+
+  const handlePrevious = () => setPage((prev) => Math.max(0, prev - 1));
+  const handleNext = () => setPage((prev) => Math.min(maxPage, prev + 1));
+
+  const translateX = page * 100;
 
   return (
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="h5" sx={{ mb: 2, px: 4 }}>
+    <SectionWrapper>
+      <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
         {title}
       </Typography>
-      <CarouselContainer>
-        <CarouselButton
+
+      <CarouselViewport>
+        {page > 0 && <EdgeFade position="left" />}
+        {page < maxPage && <EdgeFade position="right" />}
+
+        <ControlButton
           onClick={handlePrevious}
-          disabled={startIndex === 0}
-          sx={{ left: theme => theme.spacing(1) }}
+          disabled={page === 0}
+          sx={{ left: theme.spacing(2), visibility: page === 0 ? 'hidden' : 'visible' }}
         >
           <ChevronLeft />
-        </CarouselButton>
-        
-        <CarouselTrack
-          sx={{
-            transform: `translateX(-${startIndex * (100 / itemsPerPage)}%)`,
-          }}
+        </ControlButton>
+
+        <ControlButton
+          onClick={handleNext}
+          disabled={page >= maxPage}
+          sx={{ right: theme.spacing(2), visibility: page >= maxPage ? 'hidden' : 'visible' }}
         >
+          <ChevronRight />
+        </ControlButton>
+
+        <CarouselTrack translateX={translateX} sx={{ gap: `${gapPx}px` }}>
           {videos.map((video) => (
             <Box
               key={video._id}
-              sx={{ flex: `0 0 ${100 / itemsPerPage}%` }}
+              sx={{
+                flex: `0 0 calc((100% - ${(itemsPerPage - 1) * gapPx}px) / ${itemsPerPage})`,
+                minWidth: 0,
+              }}
             >
-              <VideoCard
-                video={video}
-                onPlay={onPlay}
-                onInfo={onInfo}
-              />
+              <VideoCard video={video} onPlay={onPlay} onInfo={onInfo} />
             </Box>
           ))}
         </CarouselTrack>
-
-        <CarouselButton
-          onClick={handleNext}
-          disabled={startIndex >= videos.length - itemsPerPage}
-          sx={{ right: theme => theme.spacing(1) }}
-        >
-          <ChevronRight />
-        </CarouselButton>
-      </CarouselContainer>
-    </Box>
+      </CarouselViewport>
+    </SectionWrapper>
   );
 };

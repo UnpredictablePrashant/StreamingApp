@@ -1,8 +1,14 @@
-#Dockerfile of streaming service
-FROM node:18-alpine
-WORKDIR /app
-COPY package.json ./
-RUN npm install
-COPY . .
+FROM node:18-alpine AS base
+
+WORKDIR /app/streamingService
+
+COPY streamingService/package*.json ./
+RUN npm install --production
+
+COPY streamingService/. ./
+COPY common ../common
+
+ENV NODE_ENV=production
 EXPOSE 3002
-CMD ["node", "index.js"]
+
+CMD ["npm", "run", "start"]

@@ -7,8 +7,9 @@ const {
   getVideoDetails
 } = require('../controllers/streaming.controller');
 
-// Stream video
-router.get('/stream', streamVideo);
+// Stream video by ID
+router.get('/stream/:videoId', streamVideo);
+router.get('/videos/:videoId/stream', streamVideo);
 
 // Get videos by genre
 router.get('/videos', getVideosByGenre);

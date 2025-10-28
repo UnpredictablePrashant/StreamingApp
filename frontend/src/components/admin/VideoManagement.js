@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Table,
@@ -25,9 +25,8 @@ import {
   Star,
   StarBorder,
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const STREAMING_API = 'http://localhost:3002/api';
+import { toast } from 'react-toastify';
+import { adminService } from '../../services/admin.service';
 
 const genres = [
   'Action',
@@ -46,20 +45,21 @@ export const VideoManagement = () => {
   const [editVideo, setEditVideo] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
 
-  useEffect(() => {
-    fetchVideos();
-  }, []);
-
-  const fetchVideos = async () => {
+  const fetchVideos = useCallback(async () => {
     try {
-      const response = await axios.get(`${STREAMING_API}/admin/videos`);
-      setVideos(response.data.videos);
+      const data = await adminService.listVideos();
+      setVideos(data);
     } catch (error) {
       console.error('Error fetching videos:', error);
+      toast.error('Unable to load videos.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchVideos();
+  }, [fetchVideos]);
 
   const handleEditClick = (video) => {
     setEditVideo(video);
@@ -73,33 +73,49 @@ export const VideoManagement = () => {
 
   const handleSaveEdit = async () => {
     try {
-      await axios.put(`${STREAMING_API}/admin/videos/${editVideo._id}`, editVideo);
-      fetchVideos();
+      const payload = {
+        title: editVideo.title,
+        description: editVideo.description,
+        genre: editVideo.genre,
+        releaseYear: Number(editVideo.releaseYear),
+        duration: Number(editVideo.duration),
+        isFeatured: !!editVideo.isFeatured,
+      };
+      await adminService.updateVideo(editVideo._id, payload);
+      toast.success('Video updated');
       handleDialogClose();
+      fetchVideos();
     } catch (error) {
       console.error('Error updating video:', error);
+      toast.error('Failed to update video.');
     }
   };
 
   const handleDeleteVideo = async (videoId) => {
     if (window.confirm('Are you sure you want to delete this video?')) {
       try {
-        await axios.delete(`${STREAMING_API}/admin/videos/${videoId}`);
+        await adminService.deleteVideo(videoId);
+        toast.success('Video deleted');
         fetchVideos();
       } catch (error) {
         console.error('Error deleting video:', error);
+        toast.error('Failed to delete video.');
       }
     }
   };
 
   const handleToggleFeatured = async (videoId, isFeatured) => {
     try {
-      await axios.patch(`${STREAMING_API}/admin/videos/${videoId}/featured`, {
-        isFeatured: !isFeatured,
-      });
-      fetchVideos();
+      await adminService.toggleFeatured(videoId, !isFeatured);
+      toast.success('Featured status updated');
+      setVideos((prev) =>
+        prev.map((video) =>
+          video._id === videoId ? { ...video, isFeatured: !isFeatured } : video,
+        ),
+      );
     } catch (error) {
       console.error('Error updating featured status:', error);
+      toast.error('Failed to update featured status.');
     }
   };
 
@@ -202,6 +218,14 @@ export const VideoManagement = () => {
                 label="Release Year"
                 name="releaseYear"
                 value={editVideo.releaseYear}
+                onChange={handleInputChange}
+              />
+              <TextField
+                fullWidth
+                type="number"
+                label="Duration (seconds)"
+                name="duration"
+                value={editVideo.duration}
                 onChange={handleInputChange}
               />
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
