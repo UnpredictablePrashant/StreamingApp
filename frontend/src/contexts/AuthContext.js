@@ -1,25 +1,34 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/auth.service';
+import { chatService } from '../services/chat.service';
 import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const initAuth = async () => {
       try {
+        const storedToken = localStorage.getItem('token');
         const currentUser = authService.getCurrentUser();
-        if (currentUser) {
+
+        if (storedToken && currentUser) {
           const verified = await authService.verifyToken();
           if (verified) {
             setUser(currentUser);
+            setToken(storedToken);
           } else {
             handleLogout();
           }
+        } else {
+          setToken(null);
+          setUser(null);
+          chatService.disconnect();
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -34,8 +43,17 @@ export const AuthProvider = ({ children }) => {
 
   const handleLogin = async (email, password) => {
     try {
-      const data = await authService.login(email, password);
-      setUser(data.user);
+      const result = await authService.login(email, password);
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error || 'Login failed',
+        };
+      }
+
+      setUser(result.user);
+      setToken(result.token || localStorage.getItem('token'));
       navigate('/browse');
       return { success: true };
     } catch (error) {
@@ -73,6 +91,8 @@ export const AuthProvider = ({ children }) => {
   const handleLogout = () => {
     authService.logout();
     setUser(null);
+    setToken(null);
+    chatService.disconnect();
     navigate('/login');
   };
 
@@ -83,7 +103,8 @@ export const AuthProvider = ({ children }) => {
     register: handleRegister,
     forgotPassword: handleForgotPassword,
     logout: handleLogout,
-    isAuthenticated: authService.isAuthenticated,
+    token,
+    isAuthenticated: () => Boolean(token),
   };
 
   if (loading) {

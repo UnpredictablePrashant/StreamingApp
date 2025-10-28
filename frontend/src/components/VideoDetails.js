@@ -2,112 +2,125 @@ import React from 'react';
 import {
   Box,
   Button,
-  Typography,
+  Chip,
+  Divider,
   IconButton,
-  Rating,
   Stack,
+  Typography,
 } from '@mui/material';
-import {
-  Close,
-  PlayArrow,
-} from '@mui/icons-material';
+import { Close, PlayArrow } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
-const DetailsContainer = styled(Box)(({ theme }) => ({
+const DetailsWrapper = styled(Box)(() => ({
   position: 'relative',
   minHeight: '100vh',
-  backgroundColor: theme.palette.background.paper,
-  color: theme.palette.text.primary,
+  color: '#fff',
+  backgroundColor: '#050505',
 }));
 
-const BackdropImage = styled(Box)(({ theme }) => ({
-  position: 'relative',
-  height: '70vh',
+const Background = styled('div')(() => ({
+  position: 'absolute',
+  inset: 0,
   backgroundSize: 'cover',
   backgroundPosition: 'center',
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.8))',
-  },
+  filter: 'brightness(0.35)',
 }));
 
-const ContentContainer = styled(Box)(({ theme }) => ({
+const Gradient = styled('div')(() => ({
+  position: 'absolute',
+  inset: 0,
+  background: 'linear-gradient(120deg, rgba(5,5,5,0.95) 35%, rgba(5,5,5,0.6) 70%, rgba(5,5,5,0.95) 100%)',
+}));
+
+const Content = styled(Box)(({ theme }) => ({
   position: 'relative',
-  padding: theme.spacing(4),
-  marginTop: -theme.spacing(20),
+  zIndex: 1,
+  maxWidth: 960,
+  margin: '0 auto',
+  padding: theme.spacing(10, 4, 6),
+}));
+
+const MetaRow = styled(Stack)(({ theme }) => ({
+  direction: 'row',
+  alignItems: 'center',
+  gap: theme.spacing(1.5),
+  flexWrap: 'wrap',
 }));
 
 export const VideoDetails = ({ video, onPlay, onClose }) => {
+  if (!video) {
+    return null;
+  }
+
+  const durationMinutes = Math.round((video.duration || 0) / 60);
+
   return (
-    <DetailsContainer>
+    <DetailsWrapper>
+      <Background style={{ backgroundImage: `url(${video.thumbnailUrl})` }} />
+      <Gradient />
+
       <IconButton
         onClick={onClose}
         sx={{
           position: 'absolute',
-          top: 16,
-          right: 16,
+          top: 24,
+          right: 24,
           zIndex: 2,
-          bgcolor: 'rgba(0,0,0,0.5)',
-          color: 'white',
-          '&:hover': {
-            bgcolor: 'rgba(0,0,0,0.7)',
-          },
+          bgcolor: 'rgba(0,0,0,0.55)',
+          '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' },
         }}
       >
         <Close />
       </IconButton>
 
-      <BackdropImage
-        sx={{
-          backgroundImage: `url(${video.thumbnailUrl})`,
-        }}
-      />
-
-      <ContentContainer>
-        <Typography variant="h3" component="h1" gutterBottom>
+      <Content>
+        <Typography variant="overline" color="rgba(255,255,255,0.65)">
+          {video.genre} • {video.releaseYear}
+        </Typography>
+        <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
           {video.title}
         </Typography>
 
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+        <MetaRow sx={{ mb: 3 }}>
+          <Chip
+            label={`${durationMinutes} minutes`}
+            sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#fff' }}
+          />
+          {video.rating ? (
+            <Chip
+              label={`Audience Score ${video.rating.toFixed(1)}`}
+              sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#fff' }}
+            />
+          ) : null}
+        </MetaRow>
+
+        <Typography variant="body1" color="rgba(255,255,255,0.85)" sx={{ mb: 4, maxWidth: 720 }}>
+          {video.description}
+        </Typography>
+
+        <Stack direction="row" spacing={2} sx={{ mb: 6 }}>
           <Button
             variant="contained"
             size="large"
             startIcon={<PlayArrow />}
             onClick={onPlay}
+            sx={{ borderRadius: 999, px: 4, fontWeight: 600 }}
           >
-            Play
+            Resume Playback
           </Button>
-
-          <Rating
-            value={video.rating}
-            readOnly
-            precision={0.5}
-            sx={{ ml: 2 }}
-          />
-
-          <Typography variant="body2" color="text.secondary">
-            {video.releaseYear} • {Math.floor(video.duration / 60)} min
-          </Typography>
         </Stack>
 
-        <Typography variant="body1" sx={{ mb: 3 }}>
-          {video.description}
-        </Typography>
+        <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)', mb: 4 }} />
 
-        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Genre:
+        <Stack spacing={1.5}>
+          <Typography variant="subtitle2" color="rgba(255,255,255,0.6)">
+            Details
           </Typography>
-          <Typography variant="body2">
-            {video.genre}
+          <Typography variant="body2" color="rgba(255,255,255,0.75)">
+            Released in {video.releaseYear}. Genre: {video.genre}. Runtime approximately {durationMinutes} minutes.
           </Typography>
         </Stack>
-      </ContentContainer>
-    </DetailsContainer>
+      </Content>
+    </DetailsWrapper>
   );
 };

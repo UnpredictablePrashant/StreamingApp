@@ -48,7 +48,6 @@ const userRegistration = async (req, res) => {
       });
     }
 
-    // Create new user
     const hash = bcrypt.hashSync(password, salt);
     const newUser = new User({
       name,
@@ -58,18 +57,15 @@ const userRegistration = async (req, res) => {
 
     const savedUser = await newUser.save();
 
-    // Remove sensitive data before sending response
-    const userData = {
-      id: savedUser._id,
-      name: savedUser.name,
-      email: savedUser.email,
-      role: savedUser.role
-    };
-
     res.status(201).json({
       success: true,
       message: "Registration successful",
-      user: userData
+      user: {
+        id: savedUser._id,
+        name: savedUser.name,
+        email: savedUser.email,
+        role: savedUser.role
+      }
     });
   } catch (err) {
     console.error('Registration error:', err);
@@ -107,7 +103,7 @@ const userLogin = async (req, res) => {
       });
     }
 
-    const token = jwt.jwtTokenGenerator(user.email);
+    const token = jwt.jwtTokenGenerator(user);
     
     // Remove sensitive data before sending
     const userData = {
@@ -120,7 +116,7 @@ const userLogin = async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
 
@@ -141,35 +137,37 @@ const userLogin = async (req, res) => {
 
 const checkUserLoginStatus = async (req, res) => {
   try {
-    const token = req.cookies.token;
+    const bearerToken = req.headers.authorization?.split(' ')[1];
+    const token = req.cookies.token || bearerToken;
     const verify = jwt.jwtTokenVerify(token);
     
-    if (verify) {
-      const user = await User.findOne({ email: verify.email });
-      if (user) {
-        const userData = {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role
-        };
-        res.json({ 
-          success: true,
-          message: "Verified",
-          user: userData
-        });
-      } else {
-        res.status(404).json({
-          success: false,
-          message: "User not found"
-        });
-      }
-    } else {
-      res.status(401).json({
+    if (!verify) {
+      return res.status(401).json({
         success: false,
         message: "Not verified"
       });
     }
+
+    const user = await User.findOne({ email: verify.email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+
+    res.json({ 
+      success: true,
+      message: "Verified",
+      user: userData
+    });
   } catch (err) {
     console.error('Verification error:', err);
     res.status(500).json({
@@ -180,15 +178,45 @@ const checkUserLoginStatus = async (req, res) => {
 }
 
 const forgetPassword = async (req, res) => {
-  try{
-    let user = await User.findOneAndUpdate({
-      email: req.body.email
-    },{
-      password: bcrypt.hashSync(req.body.password, salt)
+  try {
+    const { email, password } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+    }
+
+    if (!password) {
+      return res.json({
+        success: true,
+        message: "Password reset instructions sent"
+      });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { email },
+      { password: bcrypt.hashSync(password, salt) },
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Password updated successfully"
     });
-    console.log(user)
-  }catch(err){
-    res.status(500).send({ msg: "Something went wrong" });
+  } catch (err) {
+    console.error('Password reset error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: "Something went wrong" 
+    });
   }
 };
 
@@ -210,8 +238,8 @@ const verificationEmailTrigger = async (req,res) => {
   }
 }
 
-const verificationEmail =  (verificationToken, email) => {
-  try{    
+const verificationEmail = async (verificationToken, email) => {
+  try {
     const transporter = nodemailer.createTransport({
       host: "smtp.forwardemail.net",
       port: 465,
@@ -221,33 +249,39 @@ const verificationEmail =  (verificationToken, email) => {
         pass: "Prashant123",
       }
     });
-    const info =  transporter.sendMail({
-      from: '"Fred Foo 👻" <prashantdey@mailsire.com>', // sender address
-      to: email, // list of receivers
-      subject: "Hello ✔", // Subject line
-      text: `${process.env.HOST}/val/${verificationToken}/${email}`, // plain text body
-      html: "<b>Hello world?</b>", // html body
-    });
-  
-    console.log("Message sent: %s", info.messageId);
-  
-    
-  }catch(err){
-    res.status(500).send({ msg: "Something went wrong" });
-  }
-}
 
-const verificationEmailAfterUserClick = async (req,res) => {
-  try{
-    emailVerificationTokenFromUrl = req.params['vid']
-    email = req.params['email']
-    let user = User.findOne({email: email, verificationToken: emailVerificationTokenFromUrl, verificationTokenStatus: true})
-    if(user == null){
-      res.send({msg: "Wrong Token"})
-    }else{
-      console.log('Successfully Validated')
+    const info = await transporter.sendMail({
+      from: '"Streaming App" <noreply@streamingapp.com>',
+      to: email,
+      subject: "Verify your email",
+      text: `${process.env.HOST}/val/${verificationToken}/${email}`,
+      html: `<p>Click to verify: <a href="${process.env.HOST}/val/${verificationToken}/${email}">Verify Email</a></p>`,
+    });
+
+    console.log("Message sent: %s", info.messageId);
+  } catch (err) {
+    console.error('Verification email error:', err);
+  }
+};
+
+const verificationEmailAfterUserClick = async (req, res) => {
+  try {
+    const verificationTokenFromUrl = req.params['vid'];
+    const email = req.params['email'];
+
+    const user = await User.findOne({
+      email,
+      verificationToken: verificationTokenFromUrl,
+      verificationTokenStatus: true
+    });
+
+    if (!user) {
+      return res.send({ msg: "Wrong Token" });
     }
-  }catch(err){
+
+    console.log('Successfully Validated');
+    res.send({ msg: "Email verified" });
+  } catch (err) {
     res.status(500).send({ msg: "Something went wrong" });
   }
 }

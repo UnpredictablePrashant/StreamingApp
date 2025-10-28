@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Container,
@@ -9,6 +9,7 @@ import {
   Button,
   Slider,
   styled,
+  CircularProgress,
 } from '@mui/material';
 import {
   PlayArrow,
@@ -19,6 +20,7 @@ import {
   ExitToApp,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { streamingService } from '../services/streaming.service';
 
 const VideoContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
@@ -48,10 +50,46 @@ export const StreamingPage = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState(1);
+  const [currentVideo, setCurrentVideo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const videoRef = useRef(null);
   const { logout, user } = useAuth();
+  const playbackUrl = currentVideo ? streamingService.getPlaybackUrl(currentVideo) : '';
+
+  useEffect(() => {
+    const loadVideo = async () => {
+      try {
+        const featured = await streamingService.getFeaturedVideos();
+        if (featured.length > 0) {
+          setCurrentVideo(featured[0]);
+        } else {
+          const videos = await streamingService.getVideos();
+          if (videos.length > 0) {
+            setCurrentVideo(videos[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading video:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVideo();
+  }, []);
+
+  useEffect(() => {
+    if (!videoRef.current || !playbackUrl) {
+      return;
+    }
+    videoRef.current.load();
+    if (isMuted) {
+      videoRef.current.muted = true;
+    }
+  }, [playbackUrl, isMuted]);
 
   const handlePlayPause = () => {
-    const video = document.getElementById('videoPlayer');
+    const video = videoRef.current;
     if (video) {
       if (isPlaying) {
         video.pause();
@@ -63,7 +101,7 @@ export const StreamingPage = () => {
   };
 
   const handleVolumeChange = (event, newValue) => {
-    const video = document.getElementById('videoPlayer');
+    const video = videoRef.current;
     if (video) {
       video.volume = newValue;
       setVolume(newValue);
@@ -72,7 +110,7 @@ export const StreamingPage = () => {
   };
 
   const handleMuteToggle = () => {
-    const video = document.getElementById('videoPlayer');
+    const video = videoRef.current;
     if (video) {
       video.muted = !isMuted;
       setIsMuted(!isMuted);
@@ -80,7 +118,7 @@ export const StreamingPage = () => {
   };
 
   const handleFullscreen = () => {
-    const video = document.getElementById('videoPlayer');
+    const video = videoRef.current;
     if (video) {
       if (video.requestFullscreen) {
         video.requestFullscreen();
@@ -109,15 +147,21 @@ export const StreamingPage = () => {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ mt: 4 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
         <VideoContainer>
           <video
             id="videoPlayer"
+            ref={videoRef}
             controls={false}
             autoPlay={false}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
           >
-            <source src="http://localhost:3002/streaming" type="video/mp4" />
+            {playbackUrl && <source src={playbackUrl} type="video/mp4" />}
             Your browser does not support the video tag.
           </video>
 
@@ -148,6 +192,7 @@ export const StreamingPage = () => {
             </IconButton>
           </Controls>
         </VideoContainer>
+        )}
 
         <Typography variant="h4" sx={{ mt: 4, mb: 2 }}>
           Now Playing

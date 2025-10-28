@@ -9,12 +9,12 @@ import {
   Paper,
   Grid,
   Alert,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import axios from 'axios';
-
-const STREAMING_API = 'http://localhost:3002/api';
+import { adminService } from '../../services/admin.service';
 
 const Input = styled('input')({
   display: 'none',
@@ -47,6 +47,7 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
     description: '',
     genre: '',
     releaseYear: new Date().getFullYear(),
+    durationMinutes: 120,
     isFeatured: false,
   });
 
@@ -57,11 +58,11 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputChange = (event) => {
+    const { name, value, type, checked } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -90,6 +91,10 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
       setError('Please fill in all required fields');
       return false;
     }
+    if (!formData.durationMinutes || Number(formData.durationMinutes) <= 0) {
+      setError('Please provide a valid duration');
+      return false;
+    }
     if (!videoFile) {
       setError('Please select a video file');
       return false;
@@ -101,68 +106,78 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
 
     setUploading(true);
     setError('');
     setSuccess('');
+    setUploadProgress(0);
 
     try {
-      // Get pre-signed URLs for upload
-      const urlsResponse = await axios.post(`${STREAMING_API}/admin/videos/upload-urls`, {
+      const durationSeconds = Math.round(Number(formData.durationMinutes) * 60);
+
+      const {
+        videoUploadUrl,
+        thumbnailUploadUrl,
+        videoKey,
+        thumbnailKey,
+      } = await adminService.getUploadUrls({
         videoFileName: videoFile.name,
         thumbnailFileName: thumbnailFile.name,
       });
 
-      const { videoUploadUrl, thumbnailUploadUrl, videoKey, thumbnailKey } = urlsResponse.data;
+      await adminService.uploadToSignedUrl(thumbnailUploadUrl, thumbnailFile);
 
-      // Upload thumbnail
-      await axios.put(thumbnailUploadUrl, thumbnailFile, {
-        headers: { 'Content-Type': thumbnailFile.type },
-      });
-
-      // Upload video with progress tracking
-      await axios.put(videoUploadUrl, videoFile, {
-        headers: { 'Content-Type': videoFile.type },
-        onUploadProgress: (progressEvent) => {
-          const progress = (progressEvent.loaded / progressEvent.total) * 100;
-          setUploadProgress(Math.round(progress));
+      await adminService.uploadToSignedUrl(videoUploadUrl, videoFile, {
+        onUploadProgress: (event) => {
+          if (event.total) {
+            const progress = (event.loaded / event.total) * 100;
+            setUploadProgress(Math.round(progress));
+          }
         },
       });
 
-      // Create video record
-      await axios.post(`${STREAMING_API}/admin/videos`, {
-        ...formData,
+      await adminService.createVideo({
+        title: formData.title,
+        description: formData.description,
+        genre: formData.genre,
+        releaseYear: Number(formData.releaseYear),
+        duration: durationSeconds,
+        isFeatured: formData.isFeatured,
         s3Key: videoKey,
-        thumbnailUrl: thumbnailKey,
+        thumbnailKey,
+        status: 'ready',
       });
 
       setSuccess('Video uploaded successfully!');
-      onUploadComplete && onUploadComplete();
-
-      // Reset form
       setFormData({
         title: '',
         description: '',
         genre: '',
         releaseYear: new Date().getFullYear(),
+        durationMinutes: 120,
         isFeatured: false,
       });
       setVideoFile(null);
       setThumbnailFile(null);
-      setUploadProgress(0);
-    } catch (error) {
-      console.error('Upload error:', error);
-      setError(error.response?.data?.message || 'Error uploading video');
+
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
+    } catch (uploadError) {
+      console.error('Error uploading video:', uploadError);
+      setError(uploadError.response?.data?.message || 'Error uploading video');
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
       <Typography variant="h5" gutterBottom>
         Upload New Video
       </Typography>
@@ -231,6 +246,32 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
             value={formData.releaseYear}
             onChange={handleInputChange}
             required
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            type="number"
+            label="Duration (minutes)"
+            name="durationMinutes"
+            value={formData.durationMinutes}
+            onChange={handleInputChange}
+            required
+            inputProps={{ min: 1 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <FormControlLabel
+            control={
+              <Switch
+                name="isFeatured"
+                checked={formData.isFeatured}
+                onChange={handleInputChange}
+              />
+            }
+            label="Feature this video"
           />
         </Grid>
 

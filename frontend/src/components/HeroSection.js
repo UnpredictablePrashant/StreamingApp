@@ -1,119 +1,95 @@
 import React from 'react';
-import { Box, Button, Typography, Container } from '@mui/material';
-import { PlayArrow, Info } from '@mui/icons-material';
+import { Box, Button, Chip, Container, Stack, Typography } from '@mui/material';
+import { PlayArrow, Info, Bolt } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
-const HeroContainer = styled(Box)(({ theme }) => ({
+const HeroWrapper = styled(Box)(({ theme }) => ({
   position: 'relative',
-  height: '80vh',
-  color: 'white',
+  minHeight: '78vh',
   display: 'flex',
-  alignItems: 'center',
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '7.5rem',
-    background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.6), rgba(0,0,0,0.8))',
-  },
+  alignItems: 'flex-end',
+  color: theme.palette.common.white,
+  overflow: 'hidden',
 }));
 
-const HeroBackdrop = styled(Box)(({ theme }) => ({
+const HeroBackdrop = styled(Box)(() => ({
   position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
+  inset: 0,
   backgroundSize: 'cover',
   backgroundPosition: 'center',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: '40%',
-    bottom: 0,
-    background: 'linear-gradient(90deg, rgba(0,0,0,0.8), transparent)',
-  },
+  transform: 'scale(1.02)',
+  filter: 'brightness(0.75)',
+}));
+
+const GradientOverlay = styled(Box)(() => ({
+  position: 'absolute',
+  inset: 0,
+  background: 'linear-gradient(120deg, rgba(10,10,10,0.9) 20%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.85) 100%)',
 }));
 
 const HeroContent = styled(Container)(({ theme }) => ({
   position: 'relative',
-  zIndex: 1,
-  paddingTop: theme.spacing(8),
+  zIndex: 2,
+  paddingBlock: theme.spacing(12),
 }));
 
-const ButtonContainer = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  gap: theme.spacing(2),
-  marginTop: theme.spacing(3),
+const ActionButton = styled(Button)(({ theme }) => ({
+  borderRadius: 999,
+  paddingInline: theme.spacing(3),
+  textTransform: 'none',
+  fontWeight: 600,
 }));
 
 export const HeroSection = ({ featured, onPlay, onInfo }) => {
-  if (!featured) return null;
+  if (!featured) {
+    return null;
+  }
+
+  const metadata = [featured.genre, featured.releaseYear, `${Math.round((featured.duration || 0) / 60)} min`]
+    .filter(Boolean)
+    .join(' • ');
 
   return (
-    <HeroContainer>
-      <HeroBackdrop
-        sx={{
-          backgroundImage: `url(${featured.thumbnailUrl})`,
-        }}
-      />
-      <HeroContent>
-        <Typography
-          variant="h2"
-          component="h1"
-          sx={{
-            fontWeight: 'bold',
-            mb: 2,
-            maxWidth: '40%',
-          }}
-        >
-          {featured.title}
-        </Typography>
-        <Typography
-          variant="h6"
-          sx={{
-            mb: 3,
-            maxWidth: '40%',
-          }}
-        >
-          {featured.description}
-        </Typography>
-        <ButtonContainer>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<PlayArrow />}
-            onClick={() => onPlay(featured)}
-            sx={{
-              bgcolor: 'white',
-              color: 'black',
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.75)',
-              },
-            }}
-          >
-            Play
-          </Button>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<Info />}
-            onClick={() => onInfo(featured)}
-            sx={{
-              bgcolor: 'rgba(109, 109, 110, 0.7)',
-              '&:hover': {
-                bgcolor: 'rgba(109, 109, 110, 0.4)',
-              },
-            }}
-          >
-            More Info
-          </Button>
-        </ButtonContainer>
+    <HeroWrapper>
+      <HeroBackdrop sx={{ backgroundImage: `url(${featured.thumbnailUrl})` }} />
+      <GradientOverlay />
+      <HeroContent maxWidth="lg">
+        <Stack spacing={3} sx={{ maxWidth: { xs: '100%', md: '55%' } }}>
+          <Chip
+            color="primary"
+            icon={<Bolt />}
+            label="Featured Premiere"
+            sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
+          />
+          <Typography variant="h3" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+            {featured.title}
+          </Typography>
+          <Typography variant="h6" color="rgba(255,255,255,0.8)" sx={{ fontWeight: 400 }}>
+            {featured.description}
+          </Typography>
+          <Typography variant="body2" color="rgba(255,255,255,0.7)">
+            {metadata}
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ pt: 1 }}>
+            <ActionButton
+              variant="contained"
+              color="primary"
+              startIcon={<PlayArrow />}
+              onClick={() => onPlay?.(featured)}
+            >
+              Watch Now
+            </ActionButton>
+            <ActionButton
+              variant="outlined"
+              color="inherit"
+              startIcon={<Info />}
+              onClick={() => onInfo?.(featured)}
+            >
+              View Details
+            </ActionButton>
+          </Stack>
+        </Stack>
       </HeroContent>
-    </HeroContainer>
+    </HeroWrapper>
   );
 };

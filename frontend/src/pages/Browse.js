@@ -1,15 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Dialog, CircularProgress } from '@mui/material';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Box, CircularProgress, Dialog, Typography } from '@mui/material';
+import { toast } from 'react-toastify';
 import { Header } from '../components/Header';
-import { UserDebug } from '../components/UserDebug';
 import { HeroSection } from '../components/HeroSection';
 import { VideoCarousel } from '../components/VideoCarousel';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { VideoDetails } from '../components/VideoDetails';
 import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import { streamingService } from '../services/streaming.service';
 
-const STREAMING_API = 'http://localhost:3002/api';
+const buildGenreGroups = (videos) => {
+  const byGenre = videos.reduce((acc, video) => {
+    if (!video.genre) {
+      return acc;
+    }
+    acc[video.genre] = acc[video.genre] || [];
+    acc[video.genre].push(video);
+    return acc;
+  }, {});
+
+  return Object.entries(byGenre).map(([genre, genreVideos]) => ({
+    genre,
+    videos: genreVideos,
+  }));
+};
 
 export const Browse = () => {
   const { user } = useAuth();
@@ -20,37 +34,60 @@ export const Browse = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const [featuredRes, genresRes] = await Promise.all([
-          axios.get(`${STREAMING_API}/streaming/videos/featured`),
-          axios.get(`${STREAMING_API}/streaming/videos`)
-        ]);
+  const loadVideos = useCallback(async () => {
+    try {
+      const [featuredVideos, catalogue] = await Promise.all([
+        streamingService.getFeaturedVideos(),
+        streamingService.getVideos(),
+      ]);
 
-        if (featuredRes.data.success && featuredRes.data.videos.length > 0) {
-          setFeatured(featuredRes.data.videos[0]);
-        }
-
-        if (genresRes.data.success) {
-          // Group videos by genre
-          const videos = genresRes.data.videos;
-          const genres = [...new Set(videos.map(v => v.genre))];
-          const groupedVideos = genres.map(genre => ({
-            genre,
-            videos: videos.filter(v => v.genre === genre)
-          }));
-          setVideosByGenre(groupedVideos);
-        }
-      } catch (error) {
-        console.error('Error fetching videos:', error);
-      } finally {
-        setLoading(false);
+      if (featuredVideos.length > 0) {
+        setFeatured(featuredVideos[0]);
       }
-    };
 
-    fetchVideos();
+      setVideosByGenre(buildGenreGroups(catalogue));
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      toast.error('Unable to load videos right now.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadVideos();
+  }, [loadVideos]);
+
+  const trendingVideos = useMemo(() => {
+    const uniqueMap = new Map();
+    videosByGenre.forEach((group) => {
+      group.videos.forEach((video) => {
+        if (!uniqueMap.has(video._id)) {
+          uniqueMap.set(video._id, video);
+        }
+      });
+    });
+    return Array.from(uniqueMap.values()).slice(0, 10);
+  }, [videosByGenre]);
+
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery) {
+      return videosByGenre;
+    }
+
+    const lowerQuery = searchQuery.toLowerCase();
+
+    return videosByGenre
+      .map((group) => ({
+        genre: group.genre,
+        videos: group.videos.filter(
+          (video) =>
+            video.title.toLowerCase().includes(lowerQuery) ||
+            video.description.toLowerCase().includes(lowerQuery),
+        ),
+      }))
+      .filter((group) => group.videos.length > 0);
+  }, [videosByGenre, searchQuery]);
 
   const handlePlay = (video) => {
     setSelectedVideo(video);
@@ -62,7 +99,7 @@ export const Browse = () => {
     setIsPlaying(false);
   };
 
-  const handleClose = () => {
+  const handleCloseDialog = () => {
     setSelectedVideo(null);
     setIsPlaying(false);
   };
@@ -75,6 +112,7 @@ export const Browse = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          bgcolor: 'background.default',
         }}
       >
         <CircularProgress />
@@ -82,60 +120,64 @@ export const Browse = () => {
     );
   }
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-  };
-
-  const filteredVideos = videosByGenre.map(group => ({
-    genre: group.genre,
-    videos: group.videos.filter(video =>
-      video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      video.description.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  })).filter(group => group.videos.length > 0);
+  const sectionsToRender = filteredGroups;
 
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
-      <Header onSearch={handleSearch} />
-      <HeroSection
-        featured={featured}
-        onPlay={handlePlay}
-        onInfo={handleInfo}
-      />
+      <Header onSearch={setSearchQuery} />
+      <HeroSection featured={featured} onPlay={handlePlay} onInfo={handleInfo} />
 
-      <Box sx={{ mt: -8, position: 'relative', zIndex: 2 }}>
-        {filteredVideos.map((genreGroup) => (
-          <VideoCarousel
-            key={genreGroup.genre}
-            title={genreGroup.genre}
-            videos={genreGroup.videos}
-            onPlay={handlePlay}
-            onInfo={handleInfo}
-          />
-        ))}
+      <Box sx={{ position: 'relative', zIndex: 1, mt: -10 }}>
+        <Box sx={{ px: { xs: 2, md: 6 }, pb: 6 }}>
+          {searchQuery && sectionsToRender.length === 0 && (
+            <Typography variant="h6" color="text.secondary" sx={{ py: 6 }}>
+              No titles matched “{searchQuery}”. Try searching for another keyword.
+            </Typography>
+          )}
+
+          {!searchQuery && trendingVideos.length > 0 && (
+            <VideoCarousel
+              title={user ? 'Trending For You' : 'Trending Now'}
+              videos={trendingVideos}
+              onPlay={handlePlay}
+              onInfo={handleInfo}
+            />
+          )}
+
+          {sectionsToRender.map((group) => (
+            <VideoCarousel
+              key={group.genre}
+              title={group.genre}
+              videos={group.videos}
+              onPlay={handlePlay}
+              onInfo={handleInfo}
+            />
+          ))}
+        </Box>
       </Box>
 
       <Dialog
         fullScreen
-        open={!!selectedVideo}
-        onClose={handleClose}
+        open={Boolean(selectedVideo)}
+        onClose={handleCloseDialog}
+        PaperProps={{
+          sx: {
+            bgcolor: 'rgba(5,5,5,0.95)',
+          },
+        }}
       >
         {selectedVideo && (
           isPlaying ? (
-            <VideoPlayer
-              video={selectedVideo}
-              onClose={handleClose}
-            />
+            <VideoPlayer video={selectedVideo} onClose={handleCloseDialog} />
           ) : (
             <VideoDetails
               video={selectedVideo}
               onPlay={() => setIsPlaying(true)}
-              onClose={handleClose}
+              onClose={handleCloseDialog}
             />
           )
         )}
       </Dialog>
-      <UserDebug />
     </Box>
   );
 };

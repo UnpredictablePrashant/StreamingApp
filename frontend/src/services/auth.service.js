@@ -1,32 +1,36 @@
 import { api } from './api';
 
+const persistUser = (user, token) => {
+  if (token) {
+    localStorage.setItem('token', token);
+  }
+  if (user) {
+    localStorage.setItem('user', JSON.stringify(user));
+  }
+};
+
 export const authService = {
   async login(email, password) {
     try {
-      console.log('Login attempt for:', email); // Debug log
       const response = await api.post('/login', { email, password });
-      console.log('Login response:', response.data); // Debug log
-      
-      if (response.data.msg === "Login Successful") {
-        const { token, user } = response.data;
-        // Make sure we have the role information
-        const userData = {
-          ...user,
-          role: user?.role || 'user' // Default to 'user' if role is not set
-        };
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(userData));
-        console.log('Stored user data:', userData); // Debug log
-        return { success: true, user: userData };
+      if (!response.data.success) {
+        return { success: false, error: response.data.message || 'Login failed' };
       }
-      
-      return { 
-        success: false, 
-        error: response.data.msg || 'Login failed'
+
+      const userData = {
+        ...response.data.user,
+        role: response.data.user?.role || 'user',
+      };
+
+      persistUser(userData, response.data.token);
+      return {
+        success: true,
+        user: userData,
+        token: response.data.token,
+        message: response.data.message,
       };
     } catch (error) {
-      console.error('Login error:', error.response?.data || error);
-      const message = error.response?.data?.msg || 'An error occurred during login';
+      const message = error.response?.data?.message || 'An error occurred during login';
       return { success: false, error: message };
     }
   },
@@ -34,39 +38,43 @@ export const authService = {
   async register(userData) {
     try {
       const response = await api.post('/register', userData);
-      console.log('Registration response:', response.data); // Debug log
-      
-      if (response.data.msg === "Registered successfully") {
-        return { success: true };
+      if (response.data.success) {
+        return { success: true, message: response.data.message };
       }
-      
-      return { 
-        success: false, 
-        error: response.data.msg || 'Registration failed'
+
+      return {
+        success: false,
+        error: response.data.message || 'Registration failed',
       };
     } catch (error) {
-      console.error('Registration error:', error.response?.data || error);
-      const message = error.response?.data?.msg || 'An error occurred during registration';
+      const message = error.response?.data?.message || 'An error occurred during registration';
       return { success: false, error: message };
     }
   },
 
   async forgotPassword(email) {
-    const response = await api.post('/forgetPassword', { email });
-    return response.data;
+    try {
+      const response = await api.post('/forgetPassword', { email });
+      return {
+        success: response.data.success,
+        message: response.data.message,
+        error: response.data.success ? null : response.data.message,
+      };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Unable to process request';
+      return { success: false, error: message };
+    }
   },
 
   async verifyToken() {
     try {
       const response = await api.get('/verify');
       if (response.data.success && response.data.user) {
-        // Update stored user data with latest from server
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        persistUser(response.data.user);
         return true;
       }
       return false;
     } catch (error) {
-      console.error('Token verification error:', error);
       return false;
     }
   },

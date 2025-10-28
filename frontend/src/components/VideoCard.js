@@ -1,71 +1,95 @@
 import React from 'react';
-import { Card, CardMedia, CardContent, Typography, Box } from '@mui/material';
-import { PlayArrow, Info } from '@mui/icons-material';
+import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { PlayArrow, InfoOutlined } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const CardContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
-  transition: 'transform 0.3s ease-in-out',
+  borderRadius: theme.shape.borderRadius * 1.5,
+  overflow: 'hidden',
+  cursor: 'pointer',
+  transformOrigin: 'center',
+  transition: 'transform 240ms ease, box-shadow 240ms ease',
+  backgroundColor: theme.palette.background.paper,
   '&:hover': {
     transform: 'scale(1.05)',
-    zIndex: 1,
-    '& .MuiCardContent-root': {
-      opacity: 1,
-    },
+    boxShadow: theme.shadows[8],
   },
 }));
 
-const HoverContent = styled(CardContent)(({ theme }) => ({
+const Thumbnail = styled('div')(() => ({
+  paddingTop: '56.25%',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+}));
+
+const Overlay = styled(Box)(({ theme }) => ({
   position: 'absolute',
-  bottom: 0,
-  left: 0,
-  right: 0,
-  background: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.6), transparent)',
-  opacity: 0,
-  transition: 'opacity 0.3s ease-in-out',
-  padding: theme.spacing(2),
+  inset: 0,
+  background: 'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.7) 80%)',
+  color: theme.palette.common.white,
   display: 'flex',
   flexDirection: 'column',
-  gap: theme.spacing(1),
+  justifyContent: 'flex-end',
+  padding: theme.spacing(2),
+  gap: theme.spacing(1.5),
 }));
 
-const ActionButton = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
+const ActionRow = styled(Stack)(({ theme }) => ({
+  direction: 'row',
   gap: theme.spacing(1),
-  cursor: 'pointer',
-  '&:hover': {
-    color: theme.palette.primary.main,
-  },
+  flexWrap: 'wrap',
+  alignItems: 'center',
 }));
 
 export const VideoCard = ({ video, onPlay, onInfo }) => {
   return (
-    <StyledCard>
-      <CardMedia
-        component="img"
-        height="200"
-        image={video.thumbnailUrl}
-        alt={video.title}
-      />
-      <HoverContent>
-        <Typography variant="h6" component="div">
-          {video.title}
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <ActionButton onClick={() => onPlay(video)}>
+    <CardContainer onClick={() => onInfo?.(video)}>
+      <Thumbnail style={{ backgroundImage: `url(${video.thumbnailUrl})` }} />
+      <Overlay>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="h6" sx={{ fontWeight: 600, flexGrow: 1 }} noWrap>
+            {video.title}
+          </Typography>
+          <IconButton
+            size="small"
+            sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#fff' }}
+            onClick={(event) => {
+              event.stopPropagation();
+              onPlay?.(video);
+            }}
+          >
             <PlayArrow />
-            <Typography variant="body2">Play</Typography>
-          </ActionButton>
-          <ActionButton onClick={() => onInfo(video)}>
-            <Info />
-            <Typography variant="body2">More Info</Typography>
-          </ActionButton>
-        </Box>
-        <Typography variant="body2" color="text.secondary">
-          {video.genre} • {video.releaseYear}
-        </Typography>
-      </HoverContent>
-    </StyledCard>
+          </IconButton>
+        </Stack>
+
+        <ActionRow>
+          <Chip
+            label={video.genre}
+            size="small"
+            sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#fff' }}
+          />
+          <Typography variant="caption" color="rgba(255,255,255,0.75)">
+            {video.releaseYear}
+          </Typography>
+          {video.rating ? (
+            <Typography variant="caption" color="rgba(255,255,255,0.75)">
+              ⭐ {video.rating.toFixed(1)}
+            </Typography>
+          ) : null}
+          <Box sx={{ flexGrow: 1 }} />
+          <IconButton
+            size="small"
+            sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#fff' }}
+            onClick={(event) => {
+              event.stopPropagation();
+              onInfo?.(video);
+            }}
+          >
+            <InfoOutlined fontSize="small" />
+          </IconButton>
+        </ActionRow>
+      </Overlay>
+    </CardContainer>
   );
 };
