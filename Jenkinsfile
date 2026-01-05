@@ -19,14 +19,18 @@ pipeline {
         stage('ECR Login') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                                  credentialsId: 'aws-ecr-eu-west-2']]) {
+                                credentialsId: 'aws-ecr-eu-west-2']]) {
                     sh '''
-                    aws ecr get-login-password --region $AWS_REGION \
-                    | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                    export AWS_DEFAULT_REGION=eu-west-2
+                    aws sts get-caller-identity
+                    aws ecr get-login-password \
+                    | docker login --username AWS --password-stdin \
+                    975050024946.dkr.ecr.eu-west-2.amazonaws.com
                     '''
                 }
             }
         }
+
 
         stage('Build Backend Image') {
             steps {
