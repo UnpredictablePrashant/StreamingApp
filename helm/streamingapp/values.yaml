@@ -1,0 +1,21 @@
+backend:
+  name: streaming-backend
+  replicas: 2
+  image:
+    repository: 975050024946.dkr.ecr.eu-west-2.amazonaws.com/streaming-backend
+    tag: "1.0"
+  containerPort: 5000
+  service:
+    type: ClusterIP
+    port: 5000
+
+frontend:
+  name: streaming-frontend
+  replicas: 2
+  image:
+    repository: 975050024946.dkr.ecr.eu-west-2.amazonaws.com/streaming-frontend
+    tag: "1.0"
+  containerPort: 80
+  service:
+    type: LoadBalancer
+    port: 80

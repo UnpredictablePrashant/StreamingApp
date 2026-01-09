@@ -1,138 +1,176 @@
-# StreamingApp
 
-Stream premium video content, host live watch parties, and manage your catalogue with a modern microservice architecture. The platform now ships with a production-ready admin portal, real-time chat, S3-backed adaptive streaming, and a redesigned cinematic frontend experience.
+🚀 StreamingApp -- Orchestration and Scaling of a MERN Application
+==================================================================
 
-## Architecture
+📌 Project Overview
+-------------------
 
-| Service | Port | Description |
-| --- | --- | --- |
-| `authService` | 3001 | User authentication, registration, JWT issuance |
-| `streamingService` | 3002 | Video catalogue, S3 playback endpoints, public APIs |
-| `adminService` | 3003 | Dedicated admin microservice for asset management and uploads |
-| `chatService` | 3004 | Websocket + REST chat for live watch parties |
-| `frontend` | 3000 | React SPA with revamped UI and integrated chat |
-| `mongo` | 27017 | Shared MongoDB instance |
+This project demonstrates **end-to-end orchestration, containerization, CI/CD automation, monitoring, and scaling** of a **MERN (MongoDB, Express, React, Node.js) application** using modern **DevOps and Cloud-Native practices**.
 
-All backend services share common database models and utilities through `backend/common`.
+The application is containerized with Docker, automated using Jenkins CI pipelines, deployed on **Amazon EKS**, managed via **Helm**, and monitored using Kubernetes-native tooling.
 
-## Environment Configuration
+---
 
-Create an `.env` for each service (or export variables before running). All services accept the standard AWS credentials for S3 access.
+🧰 Tech Stack
+-------------
 
-### Auth Service (`backend/authService/.env`)
-```ini
-PORT=3001
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=
-```
+| Category           | Tools / Services               |
+| ------------------ | ------------------------------ |
+| Version Control    | Git, GitHub                    |
+| Containerization   | Docker                         |
+| CI/CD              | Jenkins                        |
+| Container Registry | Amazon ECR                     |
+| Orchestration      | Amazon EKS                     |
+| Package Manager    | Helm                           |
+| Monitoring         | Kubernetes Metrics Server, HPA |
+| Logging            | kubectl logs                   |
+| Cloud              | AWS (eu-west-2)                |
 
-### Streaming Service (`backend/streamingService/.env`)
-```ini
-PORT=3002
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=
-AWS_CDN_URL=
-STREAMING_PUBLIC_URL=http://localhost:3002
-```
+---
 
-### Admin Service (`backend/adminService/.env`)
-```ini
-PORT=3003
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=
-```
+🗂️ Repository Structure
+-------------------------
 
-### Chat Service (`backend/chatService/.env`)
-```ini
-PORT=3004
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-```
+`. ├── backend/                  # Node.js backend service │   ├── Dockerfile │   ├── index.js │   └── package.json │ ├── frontend/                 # React frontend │   ├── Dockerfile │   └── nginx.conf │ ├── helm/ │   └── streamingapp/ │       ├── Chart.yaml │       ├── values.yaml │       └── templates/ │           ├── backend-deployment.yaml │           ├── backend-service.yaml │           ├── frontend-deployment.yaml │           └── frontend-service.yaml │ ├── Jenkinsfile               # CI pipeline └── README.md`
 
-### Frontend build variables (`frontend/.env` or Docker build args)
-```ini
-REACT_APP_AUTH_API_URL=http://localhost:3001/api
-REACT_APP_STREAMING_API_URL=http://localhost:3002/api
-REACT_APP_STREAMING_PUBLIC_URL=http://localhost:3002
-REACT_APP_ADMIN_API_URL=http://localhost:3003/api
-REACT_APP_CHAT_API_URL=http://localhost:3004/api
-REACT_APP_CHAT_SOCKET_URL=http://localhost:3004
-```
+---
 
-## Running with Docker Compose
+🔄 Project Workflow
+-------------------
 
-1. Populate the environment variables above (or rely on the defaults baked into `docker-compose.yml`).
-2. Build and start the stack:
-   ```bash
-   docker-compose up --build
-   ```
-3. Navigate to `http://localhost:3000` for the web app.
+### 1️⃣ Version Control
 
-The compose file provisions MongoDB plus all four Node.js microservices. S3 credentials are optional for local testing—you can still browse seeded metadata, but streaming requires valid S3 objects.
+- Forked the original repository
+- Maintained a `dev` branch
+- Synced upstream changes when required
 
-## Local Development
+---
 
-Install dependencies for each service:
+### 2️⃣ Containerization
 
-```bash
-# auth service
-cd backend/authService && npm install
+- **Backend**: Node.js service containerized using `node:18-alpine`
+- **Frontend**: React app built and served via `nginx` using multi-stage Docker builds
+- Images tested locally before cloud deployment
 
-# streaming service
-cd ../streamingService && npm install
+---
 
-# admin service
-cd ../adminService && npm install
+### 3️⃣ AWS Setup
 
-# chat service
-cd ../chatService && npm install
+- AWS CLI configured
+- Region standardized to **`eu-west-2`**
+- Amazon ECR repositories created for frontend and backend
 
-# frontend
-cd ../../frontend && npm install
-```
+---
 
-Run the services (in separate terminals) after starting MongoDB:
+### 4️⃣ CI/CD with Jenkins
 
-```bash
-cd backend/authService && npm run dev
-cd backend/streamingService && npm run dev
-cd backend/adminService && npm run dev
-cd backend/chatService && npm run dev
-cd frontend && npm start
-```
+- Jenkins installed and configured
+- Pipeline stages:
 
-## Feature Highlights
+  - Git checkout
+  - Docker build
+  - ECR authentication
+  - Docker image push
+- Jenkinsfile committed to repository
+- Successful green pipeline execution
 
-- **S3-backed adaptive streaming** with secure signed uploads for admins.
-- **Dedicated admin microservice** for video ingestion, metadata management, and featured curation.
-- **Real-time chat** overlay in the player (Socket.IO + persistent message history).
-- **Modern React experience** featuring cinematic hero sections, dynamic carousels, and responsive design.
-- **Role-aware access control** across frontend routes and backend microservices.
+---
 
-## Testing
+### 5️⃣ Kubernetes Deployment (EKS)
 
-Automated tests are not yet included. Recommended smoke checks:
+- EKS cluster created using `eksctl`
+- Managed node group with auto-scaling capability
+- `kubectl` configured automatically
 
-1. Register and log in through the web UI.
-2. Upload a small video + thumbnail via the admin dashboard (requires valid S3 credentials).
-3. Confirm playback from the browse page and verify that chat messages broadcast between multiple browser tabs.
+---
 
-## License
+### 6️⃣ Helm-Based Deployment
 
-MIT © StreamFlix Team
+- Helm chart created for application
+- Separate Kubernetes Deployments and Services for frontend and backend
+- Frontend exposed using **LoadBalancer**
+- Backend exposed using **ClusterIP**
+
+---
+
+### 7️⃣ Monitoring & Scaling
+
+- **metrics-server** enabled
+- Resource metrics verified using:
+
+  `kubectl top nodes kubectl top pods`
+- **Horizontal Pod Autoscaler (HPA)** configured for backend:
+
+  `kubectl autoscale deployment streaming-backend --cpu-percent=50 --min=2 --max=5`
+- Manual scaling validated using:
+
+  `kubectl scale deployment streaming-backend --replicas=4`
+
+---
+
+### 8️⃣ Logging
+
+- Application logs accessed using:
+
+  `kubectl logs deployment/streaming-backend kubectl logs deployment/streaming-frontend`
+- Logging strategy documented for production readiness
+
+---
+
+🌐 Application Access
+---------------------
+
+- Frontend exposed via AWS LoadBalancer
+- External URL obtained using:
+
+  `kubectl get svc streaming-frontend`
+- Application accessible via browser
+
+---
+
+📸 Evidence & Validation
+------------------------
+
+The following were captured for validation and submission:
+
+- Jenkins pipeline success
+- EKS node readiness
+- Running pods and services
+- Application UI access
+- Metrics and HPA output
+
+---
+
+🧠 Key Learnings
+----------------
+
+- Practical CI/CD pipeline implementation
+- Cloud-native deployment using Kubernetes
+- Helm chart structuring and troubleshooting
+- Debugging real-world DevOps issues
+- Monitoring and scaling containerized workloads
+
+---
+
+✅ Project Status
+-----------------
+
+✔ Fully deployed
+✔ Scalable
+✔ Monitored
+✔ CI/CD automated
+✔ Ready for submission
+
+---
+
+📎 Submission
+-------------
+
+**GitHub Repository:**
+👉 [https://github.com/JoinDeeHub/StreamingApp_Orchestration-and-Scaling-of-a-MERN-Application](https://github.com/JoinDeeHub/StreamingApp_Orchestration-and-Scaling-of-a-MERN-Application)
+
+---
+
+### 🏆 Final Note
+
+This project demonstrates a **complete DevOps lifecycle** --- from source code to scalable production deployment --- following industry best practices.

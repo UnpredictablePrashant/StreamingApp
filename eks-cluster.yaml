@@ -1,0 +1,28 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: streamingapp-deehub-eks
+  region: eu-west-2
+  version: "1.29"
+
+vpc:
+  id: vpc-0ddccdcb774a72caa
+  subnets:
+    public:
+      eu-west-2b:
+        id: subnet-0908438906ffccb89
+      eu-west-2a:
+        id: subnet-0e4c47ebe883747b4
+      eu-west-2c:
+        id: subnet-05380e1e9f6cbf80d
+
+nodeGroups:
+  - name: ng-general
+    instanceType: t3.medium
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 4
+    volumeSize: 20
+    ssh:
+      allow: false
