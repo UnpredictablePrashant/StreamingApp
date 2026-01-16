@@ -16,10 +16,7 @@ import {
   DialogActions,
   TextField,
 } from '@mui/material';
-import { useAuth } from '../contexts/AuthContext';
-
 export const Settings = () => {
-  const { user } = useAuth();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [autoplay, setAutoplay] = useState(true);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
@@ -167,3 +164,9 @@ export const Settings = () => {
     </Box>
   );
 };
+
+
+
+
+
+

@@ -124,3 +124,9 @@ export const VideoDetails = ({ video, onPlay, onClose }) => {
     </DetailsWrapper>
   );
 };
+
+
+
+
+
+

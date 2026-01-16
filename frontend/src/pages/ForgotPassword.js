@@ -87,3 +87,4 @@ export const ForgotPassword = () => {
     </AuthContainer>
   );
 };
+

@@ -93,3 +93,9 @@ export const HeroSection = ({ featured, onPlay, onInfo }) => {
     </HeroWrapper>
   );
 };
+
+
+
+
+
+
