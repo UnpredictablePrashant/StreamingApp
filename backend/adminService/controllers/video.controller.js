@@ -1,4 +1,5 @@
 const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const fs = require('fs');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { Video } = require('../models/video.model');
 const { s3Client, buildPublicUrl } = require('../util/s3');
@@ -91,6 +92,152 @@ const getUploadUrls = async (req, res, next) => {
       thumbnailKey,
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+const getVideoUploadUrl = async (req, res, next) => {
+  try {
+    ensureBucket();
+    const { videoFileName } = req.body;
+
+    if (!videoFileName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Video file name is required',
+      });
+    }
+
+    const now = Date.now();
+    const videoKey = `videos/${now}-${videoFileName}`;
+
+    const videoUploadUrl = await getSignedUrl(
+      s3Client,
+      new PutObjectCommand({ Bucket: bucket, Key: videoKey }),
+      { expiresIn: 3600 },
+    );
+
+    res.json({
+      success: true,
+      videoUploadUrl,
+      videoKey,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getThumbnailUploadUrl = async (req, res, next) => {
+  try {
+    ensureBucket();
+    const { thumbnailFileName } = req.body;
+
+    if (!thumbnailFileName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thumbnail file name is required',
+      });
+    }
+
+    const now = Date.now();
+    const thumbnailKey = `thumbnails/${now}-${thumbnailFileName}`;
+
+    const thumbnailUploadUrl = await getSignedUrl(
+      s3Client,
+      new PutObjectCommand({ Bucket: bucket, Key: thumbnailKey }),
+      { expiresIn: 3600 },
+    );
+
+    res.json({
+      success: true,
+      thumbnailUploadUrl,
+      thumbnailKey,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const uploadVideoFile = async (req, res, next) => {
+  try {
+    ensureBucket();
+    const { file } = req;
+
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Video file is required',
+      });
+    }
+
+    const now = Date.now();
+    const videoKey = `videos/${now}-${file.originalname}`;
+
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: videoKey,
+        Body: fs.createReadStream(file.path),
+        ContentType: file.mimetype,
+      }),
+    );
+
+    await fs.promises.unlink(file.path);
+
+    res.json({
+      success: true,
+      videoKey,
+    });
+  } catch (error) {
+    if (req.file?.path) {
+      try {
+        await fs.promises.unlink(req.file.path);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup video upload file:', cleanupError);
+      }
+    }
+    next(error);
+  }
+};
+
+const uploadThumbnailFile = async (req, res, next) => {
+  try {
+    ensureBucket();
+    const { file } = req;
+
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thumbnail file is required',
+      });
+    }
+
+    const now = Date.now();
+    const thumbnailKey = `thumbnails/${now}-${file.originalname}`;
+
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: thumbnailKey,
+        Body: fs.createReadStream(file.path),
+        ContentType: file.mimetype,
+      }),
+    );
+
+    await fs.promises.unlink(file.path);
+
+    res.json({
+      success: true,
+      thumbnailKey,
+    });
+  } catch (error) {
+    if (req.file?.path) {
+      try {
+        await fs.promises.unlink(req.file.path);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup thumbnail upload file:', cleanupError);
+      }
+    }
     next(error);
   }
 };
@@ -257,6 +404,10 @@ const toggleFeatured = async (req, res, next) => {
 module.exports = {
   listVideos,
   getUploadUrls,
+  getVideoUploadUrl,
+  getThumbnailUploadUrl,
+  uploadVideoFile,
+  uploadThumbnailFile,
   createVideo,
   updateVideo,
   deleteVideo,

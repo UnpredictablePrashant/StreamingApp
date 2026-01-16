@@ -16,6 +16,7 @@ import {
   DialogActions,
   TextField,
 } from '@mui/material';
+import { Header } from '../components/Header';
 export const Settings = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [autoplay, setAutoplay] = useState(true);
@@ -48,12 +49,14 @@ export const Settings = () => {
   };
 
   return (
-    <Box sx={{ p: 3, mt: 8 }}>
-      <Typography variant="h4" gutterBottom>
-        Settings
-      </Typography>
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Header />
+      <Box sx={{ pt: { xs: 10, sm: 11, md: 12 }, px: { xs: 2, md: 6 }, pb: 8 }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+          Settings
+        </Typography>
 
-      <Paper sx={{ mt: 3 }}>
+        <Paper sx={{ mt: 3 }}>
         <List>
           <ListItem>
             <ListItemText
@@ -102,7 +105,8 @@ export const Settings = () => {
             </ListItemSecondaryAction>
           </ListItem>
         </List>
-      </Paper>
+        </Paper>
+      </Box>
 
       <Dialog
         open={openPasswordDialog}

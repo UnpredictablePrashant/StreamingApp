@@ -15,12 +15,11 @@ export const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       try {
         const storedToken = localStorage.getItem('token');
-        const currentUser = authService.getCurrentUser();
 
-        if (storedToken && currentUser) {
+        if (storedToken) {
           const verified = await authService.verifyToken();
-          if (verified) {
-            setUser(currentUser);
+          if (verified.success) {
+            setUser(verified.user);
             setToken(storedToken);
           } else {
             handleLogout();
@@ -76,10 +75,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const handleForgotPassword = async (email) => {
+  const handleForgotPassword = async (payload) => {
     try {
-      await authService.forgotPassword(email);
-      return { success: true };
+      const result = await authService.forgotPassword(payload);
+      return result;
     } catch (error) {
       return {
         success: false,

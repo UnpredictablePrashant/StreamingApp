@@ -27,7 +27,7 @@ JWT_SECRET=changeme
 CLIENT_URLS=http://localhost:3000
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-AWS_REGION=us-east-1
+AWS_REGION=ap-south-1
 AWS_S3_BUCKET=
 ```
 
@@ -39,7 +39,7 @@ JWT_SECRET=changeme
 CLIENT_URLS=http://localhost:3000
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-AWS_REGION=us-east-1
+AWS_REGION=ap-south-1
 AWS_S3_BUCKET=
 AWS_CDN_URL=
 STREAMING_PUBLIC_URL=http://localhost:3002
@@ -53,7 +53,7 @@ JWT_SECRET=changeme
 CLIENT_URLS=http://localhost:3000
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-AWS_REGION=us-east-1
+AWS_REGION=ap-south-1
 AWS_S3_BUCKET=
 ```
 
@@ -70,8 +70,8 @@ CLIENT_URLS=http://localhost:3000
 REACT_APP_AUTH_API_URL=http://localhost:3001/api
 REACT_APP_STREAMING_API_URL=http://localhost:3002/api
 REACT_APP_STREAMING_PUBLIC_URL=http://localhost:3002
-REACT_APP_ADMIN_API_URL=http://localhost:3003/api
-REACT_APP_CHAT_API_URL=http://localhost:3004/api
+REACT_APP_ADMIN_API_URL=http://localhost:3003/api/admin
+REACT_APP_CHAT_API_URL=http://localhost:3004/api/chat
 REACT_APP_CHAT_SOCKET_URL=http://localhost:3004
 ```
 

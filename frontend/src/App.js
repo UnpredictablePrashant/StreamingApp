@@ -15,6 +15,7 @@ import { Browse } from './pages/Browse';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { Settings } from './pages/Settings';
 import { Profile } from './pages/Profile';
+import { Collection } from './pages/Collection';
 import { LandingPage } from './pages/LandingPage';
 
 const theme = createTheme({
@@ -104,6 +105,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/collection"
+              element={
+                <ProtectedRoute>
+                  <Collection />
                 </ProtectedRoute>
               }
             />

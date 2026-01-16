@@ -47,7 +47,6 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
     description: '',
     genre: '',
     releaseYear: new Date().getFullYear(),
-    durationMinutes: 120,
     isFeatured: false,
   });
 
@@ -57,6 +56,22 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const getVideoDuration = (file) =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const tempVideo = document.createElement('video');
+      tempVideo.preload = 'metadata';
+      tempVideo.src = url;
+      tempVideo.onloadedmetadata = () => {
+        URL.revokeObjectURL(url);
+        resolve(tempVideo.duration || 0);
+      };
+      tempVideo.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Unable to read video metadata'));
+      };
+    });
 
   const handleInputChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -91,10 +106,6 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
       setError('Please fill in all required fields');
       return false;
     }
-    if (!formData.durationMinutes || Number(formData.durationMinutes) <= 0) {
-      setError('Please provide a valid duration');
-      return false;
-    }
     if (!videoFile) {
       setError('Please select a video file');
       return false;
@@ -118,21 +129,14 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
     setUploadProgress(0);
 
     try {
-      const durationSeconds = Math.round(Number(formData.durationMinutes) * 60);
+      const durationSeconds = Math.round(await getVideoDuration(videoFile));
+      if (!durationSeconds) {
+        throw new Error('Unable to determine video duration');
+      }
 
-      const {
-        videoUploadUrl,
-        thumbnailUploadUrl,
-        videoKey,
-        thumbnailKey,
-      } = await adminService.getUploadUrls({
-        videoFileName: videoFile.name,
-        thumbnailFileName: thumbnailFile.name,
-      });
+      const { thumbnailKey } = await adminService.uploadThumbnailFile(thumbnailFile);
 
-      await adminService.uploadToSignedUrl(thumbnailUploadUrl, thumbnailFile);
-
-      await adminService.uploadToSignedUrl(videoUploadUrl, videoFile, {
+      const { videoKey } = await adminService.uploadVideoFile(videoFile, {
         onUploadProgress: (event) => {
           if (event.total) {
             const progress = (event.loaded / event.total) * 100;
@@ -159,7 +163,6 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
         description: '',
         genre: '',
         releaseYear: new Date().getFullYear(),
-        durationMinutes: 120,
         isFeatured: false,
       });
       setVideoFile(null);
@@ -246,19 +249,6 @@ export const VideoUploadForm = ({ onUploadComplete }) => {
             value={formData.releaseYear}
             onChange={handleInputChange}
             required
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            type="number"
-            label="Duration (minutes)"
-            name="durationMinutes"
-            value={formData.durationMinutes}
-            onChange={handleInputChange}
-            required
-            inputProps={{ min: 1 }}
           />
         </Grid>
 

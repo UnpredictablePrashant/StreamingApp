@@ -116,7 +116,7 @@ export const Header = ({ onSearch }) => {
     () => [
       { label: 'Home', path: '/' },
       { label: 'Browse', path: '/browse' },
-      { label: 'My Collection', path: '/profile' },
+      { label: 'My Collection', path: '/collection' },
     ],
     [],
   );

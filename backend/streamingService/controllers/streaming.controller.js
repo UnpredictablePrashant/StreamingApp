@@ -187,9 +187,59 @@ const getVideoDetails = async (req, res) => {
   }
 };
 
+const getThumbnail = async (req, res) => {
+  try {
+    const rawKey = req.params[0];
+    const key = rawKey ? decodeURI(rawKey) : null;
+
+    if (!key) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thumbnail key is required',
+      });
+    }
+
+    const bucket = process.env.AWS_S3_BUCKET;
+    if (!bucket) {
+      return res.status(500).json({
+        success: false,
+        message: 'S3 bucket is not configured',
+      });
+    }
+
+    const { Body, ContentType, ContentLength } = await s3Client.send(
+      new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      }),
+    );
+
+    res.setHeader('Content-Type', ContentType || 'image/jpeg');
+    if (ContentLength) {
+      res.setHeader('Content-Length', ContentLength.toString());
+    }
+
+    if (Body?.pipe) {
+      Body.pipe(res);
+    } else if (Body?.transformToByteArray) {
+      const buffer = await Body.transformToByteArray();
+      res.end(Buffer.from(buffer));
+    } else {
+      res.end();
+    }
+  } catch (error) {
+    console.error('Error fetching thumbnail:', error);
+    res.status(404).json({
+      success: false,
+      message: 'Thumbnail not found',
+    });
+  }
+};
+
 module.exports = {
   streamVideo,
   getVideosByGenre,
   getFeaturedVideos,
   getVideoDetails,
+  getThumbnail,
 };

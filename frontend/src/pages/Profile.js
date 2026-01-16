@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useAuth } from '../contexts/AuthContext';
+import { Header } from '../components/Header';
 
 const ProfileAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(15),
@@ -36,12 +37,14 @@ export const Profile = () => {
   };
 
   return (
-    <Box sx={{ p: 3, mt: 8 }}>
-      <Typography variant="h4" gutterBottom>
-        Profile
-      </Typography>
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Header />
+      <Box sx={{ pt: { xs: 10, sm: 11, md: 12 }, px: { xs: 2, md: 6 }, pb: 8 }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+          Profile
+        </Typography>
 
-      <Paper sx={{ p: 4, mt: 3 }}>
+        <Paper sx={{ p: 4, mt: 3 }}>
         <Box
           sx={{
             display: 'flex',
@@ -125,7 +128,8 @@ export const Profile = () => {
             </Grid>
           </Grid>
         </Box>
-      </Paper>
+        </Paper>
+      </Box>
     </Box>
   );
 };

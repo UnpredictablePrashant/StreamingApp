@@ -122,12 +122,23 @@ export const Browse = () => {
 
   const sectionsToRender = filteredGroups;
 
-  return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
-      <Header onSearch={setSearchQuery} />
-      <HeroSection featured={featured} onPlay={handlePlay} onInfo={handleInfo} />
+  const hasFeatured = Boolean(featured);
 
-      <Box sx={{ position: 'relative', zIndex: 1, mt: -10 }}>
+  return (
+    <Box
+      sx={{
+        bgcolor: 'background.default',
+        minHeight: '100vh',
+        backgroundImage:
+          'radial-gradient(1200px circle at 20% 0%, rgba(255,71,87,0.15), transparent 45%), radial-gradient(1000px circle at 85% 5%, rgba(47,128,237,0.12), transparent 45%)',
+      }}
+    >
+      <Header onSearch={setSearchQuery} />
+      <Box sx={{ pt: hasFeatured ? 0 : { xs: 10, sm: 11, md: 12 } }}>
+        <HeroSection featured={featured} onPlay={handlePlay} onInfo={handleInfo} />
+      </Box>
+
+      <Box sx={{ position: 'relative', zIndex: 1, mt: hasFeatured ? 0 : 2 }}>
         <Box sx={{ px: { xs: 2, md: 6 }, pb: 6 }}>
           {searchQuery && sectionsToRender.length === 0 && (
             <Typography variant="h6" color="text.secondary" sx={{ py: 6 }}>

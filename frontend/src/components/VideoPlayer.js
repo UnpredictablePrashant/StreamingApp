@@ -8,6 +8,10 @@ import {
   Fade,
   Button,
   useMediaQuery,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   PlayArrow,
@@ -115,6 +119,47 @@ const formatDuration = (duration) => {
   return `${minutes}m`;
 };
 
+const RESUME_KEY_PREFIX = 'streamflix.resume';
+const RESUME_INTERVAL_MS = 20000;
+
+const loadResumeState = (videoId) => {
+  if (!videoId) {
+    return null;
+  }
+  try {
+    const raw = localStorage.getItem(`${RESUME_KEY_PREFIX}.${videoId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+const saveResumeState = (videoId, time) => {
+  if (!videoId || !Number.isFinite(time)) {
+    return;
+  }
+  const payload = {
+    time,
+    updatedAt: Date.now(),
+  };
+  try {
+    localStorage.setItem(`${RESUME_KEY_PREFIX}.${videoId}`, JSON.stringify(payload));
+  } catch (error) {
+    // ignore storage errors
+  }
+};
+
+const clearResumeState = (videoId) => {
+  if (!videoId) {
+    return;
+  }
+  try {
+    localStorage.removeItem(`${RESUME_KEY_PREFIX}.${videoId}`);
+  } catch (error) {
+    // ignore storage errors
+  }
+};
+
 export const VideoPlayer = ({ video, onClose }) => {
   const theme = useTheme();
   const isCompactLayout = useMediaQuery(theme.breakpoints.down('lg'));
@@ -127,10 +172,13 @@ export const VideoPlayer = ({ video, onClose }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [chatOpen, setChatOpen] = useState(() => !isCompactLayout);
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [resumeTime, setResumeTime] = useState(0);
 
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
+  const resumeTimerRef = useRef(null);
 
   const playbackUrl = useMemo(() => streamingService.getPlaybackUrl(video), [video]);
 
@@ -164,20 +212,37 @@ export const VideoPlayer = ({ video, onClose }) => {
       return;
     }
 
+    const stored = loadResumeState(video?._id);
+    const shouldPrompt = Boolean(stored?.time && stored.time > 5);
+    if (shouldPrompt) {
+      setResumeTime(stored.time);
+      setShowResumePrompt(true);
+    } else {
+      setResumeTime(0);
+      setShowResumePrompt(false);
+    }
+
     player.pause();
     player.currentTime = 0;
     player.src = playbackUrl;
     player.volume = volume;
     player.muted = muted;
 
-    player
-      .play()
-      .then(() => setPlaying(true))
-      .catch(() => setPlaying(false));
+    if (!shouldPrompt) {
+      player
+        .play()
+        .then(() => setPlaying(true))
+        .catch(() => setPlaying(false));
+    } else {
+      setPlaying(false);
+    }
 
     const updateTime = () => setCurrentTime(player.currentTime);
     const updateDuration = () => setDuration(player.duration || video?.duration || 0);
-    const handleEnded = () => setPlaying(false);
+    const handleEnded = () => {
+      setPlaying(false);
+      clearResumeState(video?._id);
+    };
 
     player.addEventListener('timeupdate', updateTime);
     player.addEventListener('loadedmetadata', updateDuration);
@@ -188,7 +253,31 @@ export const VideoPlayer = ({ video, onClose }) => {
       player.removeEventListener('loadedmetadata', updateDuration);
       player.removeEventListener('ended', handleEnded);
     };
-  }, [playbackUrl, muted, volume, video?.duration]);
+  }, [playbackUrl, muted, volume, video?.duration, video?._id]);
+
+  useEffect(() => {
+    if (!video?._id) {
+      return undefined;
+    }
+
+    if (resumeTimerRef.current) {
+      clearInterval(resumeTimerRef.current);
+    }
+
+    resumeTimerRef.current = setInterval(() => {
+      const player = videoRef.current;
+      if (!player || player.paused || player.ended) {
+        return;
+      }
+      saveResumeState(video._id, player.currentTime);
+    }, RESUME_INTERVAL_MS);
+
+    return () => {
+      if (resumeTimerRef.current) {
+        clearInterval(resumeTimerRef.current);
+      }
+    };
+  }, [video?._id]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -272,6 +361,29 @@ export const VideoPlayer = ({ video, onClose }) => {
     const parts = [video.releaseYear, formatDuration(video.duration), video.genre];
     return parts.filter(Boolean).join(' • ');
   }, [video]);
+
+  const handleResumePlayback = () => {
+    const player = videoRef.current;
+    if (!player) {
+      return;
+    }
+    player.currentTime = resumeTime;
+    player.play().catch(() => setPlaying(false));
+    setPlaying(true);
+    setShowResumePrompt(false);
+  };
+
+  const handleStartOver = () => {
+    clearResumeState(video?._id);
+    setResumeTime(0);
+    setShowResumePrompt(false);
+    const player = videoRef.current;
+    if (player) {
+      player.currentTime = 0;
+      player.play().catch(() => setPlaying(false));
+      setPlaying(true);
+    }
+  };
 
   return (
     <PlayerLayout>
@@ -371,6 +483,21 @@ export const VideoPlayer = ({ video, onClose }) => {
           </ControlsBar>
         </Fade>
       </VideoSurface>
+
+      <Dialog open={showResumePrompt} onClose={handleStartOver} maxWidth="xs" fullWidth>
+        <DialogTitle>Resume Playback?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            Continue from {formatTime(resumeTime)} or start from the beginning?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleStartOver}>Start Over</Button>
+          <Button onClick={handleResumePlayback} variant="contained">
+            Resume
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {chatOpen && (
         <ChatPanel

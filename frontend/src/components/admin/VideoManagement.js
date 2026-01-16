@@ -44,6 +44,8 @@ export const VideoManagement = () => {
   const [loading, setLoading] = useState(true);
   const [editVideo, setEditVideo] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [videoFile, setVideoFile] = useState(null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -66,20 +68,58 @@ export const VideoManagement = () => {
     setOpenDialog(true);
   };
 
+  const getVideoDuration = (file) =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const tempVideo = document.createElement('video');
+      tempVideo.preload = 'metadata';
+      tempVideo.src = url;
+      tempVideo.onloadedmetadata = () => {
+        URL.revokeObjectURL(url);
+        resolve(tempVideo.duration || 0);
+      };
+      tempVideo.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Unable to read video metadata'));
+      };
+    });
+
   const handleDialogClose = () => {
     setEditVideo(null);
     setOpenDialog(false);
+    setVideoFile(null);
+    setThumbnailFile(null);
   };
 
   const handleSaveEdit = async () => {
     try {
+      let nextS3Key = editVideo.s3Key;
+      let nextThumbnailKey = editVideo.thumbnailKey;
+      let nextDuration = Number(editVideo.duration);
+
+      if (videoFile) {
+        const { videoKey } = await adminService.uploadVideoFile(videoFile);
+        nextS3Key = videoKey;
+        const durationSeconds = Math.round(await getVideoDuration(videoFile));
+        if (durationSeconds) {
+          nextDuration = durationSeconds;
+        }
+      }
+
+      if (thumbnailFile) {
+        const { thumbnailKey } = await adminService.uploadThumbnailFile(thumbnailFile);
+        nextThumbnailKey = thumbnailKey;
+      }
+
       const payload = {
         title: editVideo.title,
         description: editVideo.description,
         genre: editVideo.genre,
         releaseYear: Number(editVideo.releaseYear),
-        duration: Number(editVideo.duration),
+        duration: nextDuration,
         isFeatured: !!editVideo.isFeatured,
+        s3Key: nextS3Key,
+        thumbnailKey: nextThumbnailKey,
       };
       await adminService.updateVideo(editVideo._id, payload);
       toast.success('Video updated');
@@ -220,14 +260,34 @@ export const VideoManagement = () => {
                 value={editVideo.releaseYear}
                 onChange={handleInputChange}
               />
-              <TextField
-                fullWidth
-                type="number"
-                label="Duration (seconds)"
-                name="duration"
-                value={editVideo.duration}
-                onChange={handleInputChange}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Button variant="outlined" component="label">
+                  Upload New Video File
+                  <input
+                    type="file"
+                    hidden
+                    accept="video/*"
+                    onChange={(event) => setVideoFile(event.target.files?.[0] || null)}
+                  />
+                </Button>
+                <Typography variant="body2" color="text.secondary">
+                  {videoFile ? videoFile.name : 'No file selected'}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Button variant="outlined" component="label">
+                  Upload New Thumbnail
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                  />
+                </Button>
+                <Typography variant="body2" color="text.secondary">
+                  {thumbnailFile ? thumbnailFile.name : 'No file selected'}
+                </Typography>
+              </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography>Featured</Typography>
                 <Switch

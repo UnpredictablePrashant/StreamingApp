@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Button,
@@ -20,6 +20,7 @@ import {
   MovieFilter,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Hero = styled(Box)(({ theme }) => ({
   minHeight: '85vh',
@@ -64,7 +65,14 @@ const StepCard = styled(Card)(({ theme }) => ({
 export const LandingPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate('/browse', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const features = [
     {

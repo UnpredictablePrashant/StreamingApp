@@ -26,8 +26,17 @@ class ChatService {
     this.token = null;
   }
 
+  getStoredToken() {
+    try {
+      return localStorage.getItem('token');
+    } catch (error) {
+      return null;
+    }
+  }
+
   ensureSocket(token) {
-    if (this.socket && this.token === token) {
+    const resolvedToken = token || this.getStoredToken();
+    if (this.socket && this.token === resolvedToken) {
       return this.socket;
     }
 
@@ -35,11 +44,11 @@ class ChatService {
       this.socket.disconnect();
     }
 
-    this.token = token;
+    this.token = resolvedToken;
     this.socket = io(CHAT_SOCKET_URL, {
       transports: ['websocket'],
       autoConnect: false,
-      auth: { token },
+      auth: { token: resolvedToken },
     });
 
     this.socket.on('connect_error', (error) => {
@@ -63,9 +72,10 @@ class ChatService {
       return [];
     }
 
-    const headers = token
+    const resolvedToken = token || this.getStoredToken();
+    const headers = resolvedToken
       ? {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${resolvedToken}`,
         }
       : undefined;
 
@@ -79,7 +89,8 @@ class ChatService {
   }
 
   joinRoom(videoId, token) {
-    if (!token) {
+    const resolvedToken = token || this.getStoredToken();
+    if (!resolvedToken) {
       return Promise.reject(new Error('Authentication required'));
     }
 
@@ -87,7 +98,7 @@ class ChatService {
       return Promise.reject(new Error('videoId is required'));
     }
 
-    const socket = this.ensureSocket(token);
+    const socket = this.ensureSocket(resolvedToken);
 
     return new Promise((resolve, reject) => {
       socket.emit('chat:join', { videoId }, (response) => {

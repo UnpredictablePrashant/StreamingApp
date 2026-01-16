@@ -179,7 +179,7 @@ const checkUserLoginStatus = async (req, res) => {
 
 const forgetPassword = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, code } = req.body;
 
     if (!email) {
       return res.status(400).json({
@@ -188,17 +188,32 @@ const forgetPassword = async (req, res) => {
       });
     }
 
-    if (!password) {
+    const user = await User.findOne({ email });
+
+    if (!password && !code) {
+      if (!user) {
+        return res.json({
+          success: true,
+          message: "Password reset instructions sent"
+        });
+      }
+
+      const resetCode = String(Math.floor(100000 + Math.random() * 900000));
+      const resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+      user.resetPasswordCode = resetCode;
+      user.resetPasswordExpires = resetPasswordExpires;
+      await user.save();
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Password reset code for ${email}: ${resetCode}`);
+      }
+
       return res.json({
         success: true,
-        message: "Password reset instructions sent"
+        message: "Verification code sent",
       });
     }
-
-    const user = await User.findOneAndUpdate(
-      { email },
-      { password: bcrypt.hashSync(password, salt) },
-    );
 
     if (!user) {
       return res.status(404).json({
@@ -206,6 +221,40 @@ const forgetPassword = async (req, res) => {
         message: "User not found"
       });
     }
+
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification code is required"
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "New password is required"
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long"
+      });
+    }
+
+    const expired = !user.resetPasswordExpires || user.resetPasswordExpires.getTime() < Date.now();
+    if (expired || user.resetPasswordCode !== code) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification code"
+      });
+    }
+
+    user.password = bcrypt.hashSync(password, salt);
+    user.resetPasswordCode = null;
+    user.resetPasswordExpires = null;
+    await user.save();
 
     res.json({
       success: true,

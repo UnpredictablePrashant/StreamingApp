@@ -52,9 +52,10 @@ export const authService = {
     }
   },
 
-  async forgotPassword(email) {
+  async forgotPassword(payload) {
     try {
-      const response = await api.post('/forgetPassword', { email });
+      const body = typeof payload === 'string' ? { email: payload } : payload;
+      const response = await api.post('/forgetPassword', body);
       return {
         success: response.data.success,
         message: response.data.message,
@@ -70,12 +71,16 @@ export const authService = {
     try {
       const response = await api.get('/verify');
       if (response.data.success && response.data.user) {
-        persistUser(response.data.user);
-        return true;
+        const userData = {
+          ...response.data.user,
+          role: response.data.user?.role || 'user',
+        };
+        persistUser(userData);
+        return { success: true, user: userData };
       }
-      return false;
+      return { success: false };
     } catch (error) {
-      return false;
+      return { success: false };
     }
   },
 

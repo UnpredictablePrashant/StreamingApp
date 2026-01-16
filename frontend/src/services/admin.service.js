@@ -45,6 +45,35 @@ export const adminService = {
     return data;
   },
 
+  async getVideoUploadUrl(payload) {
+    const { data } = await adminApi.post('/videos/upload-urls/video', payload);
+    return data;
+  },
+
+  async getThumbnailUploadUrl(payload) {
+    const { data } = await adminApi.post('/videos/upload-urls/thumbnail', payload);
+    return data;
+  },
+
+  async uploadVideoFile(file, options = {}) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await adminApi.post('/videos/upload/video', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: options.onUploadProgress,
+    });
+    return data;
+  },
+
+  async uploadThumbnailFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await adminApi.post('/videos/upload/thumbnail', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
+
   async createVideo(payload) {
     const { data } = await adminApi.post('/videos', payload);
     return data.video;

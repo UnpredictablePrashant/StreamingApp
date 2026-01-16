@@ -25,18 +25,8 @@ const buildPublicUrl = (key) => {
     return key;
   }
 
-  const cdnBase = process.env.AWS_CDN_URL?.replace(/\/$/, '');
-  if (cdnBase) {
-    return `${cdnBase}/${key}`;
-  }
-
-  const bucket = process.env.AWS_S3_BUCKET;
-  const region = process.env.AWS_REGION;
-  if (!bucket || !region) {
-    return key;
-  }
-
-  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+  const base = process.env.STREAMING_PUBLIC_URL?.replace(/\/$/, '') || 'http://localhost:3002';
+  return `${base}/api/streaming/thumbnails/${encodeURI(key)}`;
 };
 
 const buildStreamUrl = (videoId) => {

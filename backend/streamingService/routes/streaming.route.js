@@ -4,7 +4,8 @@ const {
   streamVideo,
   getVideosByGenre,
   getFeaturedVideos,
-  getVideoDetails
+  getVideoDetails,
+  getThumbnail,
 } = require('../controllers/streaming.controller');
 
 // Stream video by ID
@@ -19,5 +20,6 @@ router.get('/videos/featured', getFeaturedVideos);
 
 // Get video details
 router.get('/videos/:videoId', getVideoDetails);
+router.get('/thumbnails/*', getThumbnail);
 
 module.exports = router;

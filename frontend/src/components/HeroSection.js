@@ -8,6 +8,7 @@ const HeroWrapper = styled(Box)(({ theme }) => ({
   minHeight: '78vh',
   display: 'flex',
   alignItems: 'flex-end',
+  paddingTop: theme.spacing(8),
   color: theme.palette.common.white,
   overflow: 'hidden',
 }));
@@ -30,7 +31,8 @@ const GradientOverlay = styled(Box)(() => ({
 const HeroContent = styled(Container)(({ theme }) => ({
   position: 'relative',
   zIndex: 2,
-  paddingBlock: theme.spacing(12),
+  paddingTop: theme.spacing(14),
+  paddingBottom: theme.spacing(10),
 }));
 
 const ActionButton = styled(Button)(({ theme }) => ({
