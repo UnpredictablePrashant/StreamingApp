@@ -1,7 +1,7 @@
 const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { Video } = require('../../common/models/video.model');
-const { s3Client, buildPublicUrl } = require('../../common/s3');
+const { Video } = require('../models/video.model');
+const { s3Client, buildPublicUrl } = require('../util/s3');
 
 const bucket = process.env.AWS_S3_BUCKET;
 

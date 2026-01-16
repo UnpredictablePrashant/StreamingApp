@@ -9,3 +9,9 @@ router.get('/videos/:videoId/stream', videoController.streamVideo);
 router.get('/videos/:videoId', videoController.getVideoDetails);
 
 module.exports = router;
+
+
+
+
+
+

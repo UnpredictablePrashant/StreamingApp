@@ -1,4 +1,4 @@
-const { Video } = require('../../common/models/video.model');
+const { Video } = require('../models/video.model');
 const fs = require('fs');
 const path = require('path');
 
@@ -158,3 +158,9 @@ module.exports = {
   streamVideo,
   getVideoDetails
 };
+
+
+
+
+
+

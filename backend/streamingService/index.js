@@ -28,7 +28,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 // Database connection
-const { connectDB } = require('../common/db');
+const { connectDB } = require('./db');
 connectDB();
 
 // Routes

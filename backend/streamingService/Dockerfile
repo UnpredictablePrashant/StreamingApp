@@ -6,8 +6,6 @@ COPY streamingService/package*.json ./
 RUN npm install --production
 
 COPY streamingService/. ./
-COPY common ../common
-
 ENV NODE_ENV=production
 EXPOSE 3002
 

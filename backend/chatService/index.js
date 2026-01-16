@@ -42,7 +42,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(morgan('dev'));
 
-const { connectDB } = require('../common/db');
+const { connectDB } = require('./db');
 const { verifyToken, buildUserContext } = require('./util/auth');
 const { ChatMessage } = require('./models/message.model');
 

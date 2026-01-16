@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const { Video } = require('../../common/models/video.model');
+const { Video } = require('../models/video.model');
 
 const seedVideo = async () => {
   try {
@@ -37,3 +37,9 @@ const seedVideo = async () => {
 };
 
 seedVideo();
+
+
+
+
+
+

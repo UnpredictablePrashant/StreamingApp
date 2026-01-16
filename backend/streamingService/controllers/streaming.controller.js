@@ -1,5 +1,5 @@
 const { HeadObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
-const { Video } = require('../../common/models/video.model');
+const { Video } = require('../models/video.model');
 const { s3Client, buildPublicUrl, buildStreamUrl } = require('../util/s3');
 
 const CHUNK_SIZE = 10 ** 6; // 1 MB

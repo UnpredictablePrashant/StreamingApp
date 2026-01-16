@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const { Video } = require('../../common/models/video.model');
+const { Video } = require('../models/video.model');
 
 // Create a dummy admin user ID
 const adminId = new mongoose.Types.ObjectId();
