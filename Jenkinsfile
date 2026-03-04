@@ -9,40 +9,11 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        git branch: 'main', url: 'https://github.com/RajaV/StreamingApp.git'
+        git branch: 'main', 
+            url: 'https://github.com/tnraja/RajaV_StreamingApp.git',  // YOUR FORK
+            credentialsId: 'github-pat'  // ADD THIS
       }
     }
-    stage('Build Frontend') {
-      steps {
-        script {
-          docker.build("${FRONTEND_REPO}:latest", "./frontend")
-        }
-      }
-    }
-    stage('Build Backend') {
-      steps {
-        script {
-          docker.build("${BACKEND_REPO}:latest", "./backend")
-        }
-      }
-    }
-    stage('Push to ECR') {
-      steps {
-        script {
-          docker.withRegistry("https://${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com", 'ecr-creds') {
-            docker.image("${FRONTEND_REPO}:latest").push()
-            docker.image("${BACKEND_REPO}:latest").push()
-          }
-        }
-      }
-    }
-  }
-  post {
-    success {
-      echo '✅ Pipeline Success: Images pushed to ECR!'
-    }
-    failure {
-      echo '❌ Pipeline Failed'
-    }
+    // ... rest unchanged
   }
 }
