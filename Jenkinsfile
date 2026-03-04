@@ -3,8 +3,8 @@ pipeline {
   environment {
     AWS_REGION = 'us-east-1'
     AWS_ACCOUNT = '975050024946'
-    FRONTEND_REPO = "${AWS_ACCOUNT}.dkr.ecr.us-east-1.amazonaws.com/rajav-streaming-app-frontend"
-    BACKEND_REPO  = "${AWS_ACCOUNT}.dkr.ecr.us-east-1.amazonaws.com/rajav-streaming-app-backend"
+    FRONTEND_REPO = "975050024946.dkr.ecr.us-east-1.amazonaws.com/rajav-streaming-app-frontend:latest"
+    BACKEND_REPO  = "975050024946.dkr.ecr.us-east-1.amazonaws.com/rajav-streaming-app-backend:latest"
   }
   stages {
     stage('Checkout') {
