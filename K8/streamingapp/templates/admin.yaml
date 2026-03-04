@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: admin
+  template:
+    metadata:
+      labels:
+        app: admin
+    spec:
+      containers:
+      - name: admin
+        image: 975050024946.dkr.ecr.us-west-1.amazonaws.com/dineshb14-streamingapp-admin:v1
+        ports:
+        - containerPort: 3003
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: PORT
+          value: "3003"
+        - name: MONGO_URI
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: MONGO_URI
+        - name: CLIENT_URLS
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: CLIENT_URLS
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: streamingapp-secret
+              key: JWT_SECRET
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: streamingapp-secret
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: streamingapp-secret
+              key: AWS_SECRET_ACCESS_KEY
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: AWS_REGION
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin
+spec:
+  selector:
+    app: admin
+  ports:
+  - port: 3003
+    targetPort: 3003
+  type: ClusterIP
