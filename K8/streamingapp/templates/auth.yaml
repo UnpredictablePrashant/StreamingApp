@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+      - name: auth
+        image: 975050024946.dkr.ecr.us-west-1.amazonaws.com/dineshb14-streamingapp-auth:v1
+        ports:
+        - containerPort: 3001
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: PORT
+          value: "3001"
+        - name: MONGO_URI
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: MONGO_URI
+        - name: CLIENT_URLS
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: CLIENT_URLS
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: AWS_REGION
+        - name: AWS_S3_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: AWS_S3_BUCKET
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: streamingapp-secret
+              key: JWT_SECRET
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: streamingapp-secret
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: streamingapp-secret
+              key: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+spec:
+  selector:
+    app: auth
+  ports:
+  - port: 3001
+    targetPort: 3001
+  type: ClusterIP

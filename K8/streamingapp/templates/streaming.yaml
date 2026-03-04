@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: streaming
+  template:
+    metadata:
+      labels:
+        app: streaming
+    spec:
+      containers:
+      - name: streaming
+        image: 975050024946.dkr.ecr.us-west-1.amazonaws.com/dineshb14-streamingapp-streaming:v1
+        ports:
+        - containerPort: 3002
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: PORT
+          value: "3002"
+        - name: MONGO_URI
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: MONGO_URI
+        - name: CLIENT_URLS
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: CLIENT_URLS
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: AWS_REGION
+        - name: AWS_S3_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: AWS_S3_BUCKET
+        - name: AWS_CDN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: AWS_CDN_URL
+        - name: STREAMING_PUBLIC_URL
+          valueFrom:
+            configMapKeyRef:
+              name: streamingapp-config
+              key: STREAMING_PUBLIC_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: streamingapp-secret
+              key: JWT_SECRET
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: streamingapp-secret
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: streamingapp-secret
+              key: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming
+spec:
+  selector:
+    app: streaming
+  ports:
+  - port: 3002
+    targetPort: 3002
+  type: ClusterIP

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: streamingapp-config
+data:
+  MONGO_URI: mongodb://mongo:27017/streamingapp
+  CLIENT_URLS: http://frontend
+  AWS_REGION: ap-south-1
+  AWS_S3_BUCKET: streamingapp-bucket
+  AWS_CDN_URL: https://cdn.streamingapp.com
+  STREAMING_PUBLIC_URL: http://streaming:3002
+
+  REACT_APP_AUTH_API_URL: http://auth:3001/api
+  REACT_APP_STREAMING_API_URL: http://streaming:3002/api
+  REACT_APP_STREAMING_PUBLIC_URL: http://streaming:3002
+  REACT_APP_ADMIN_API_URL: http://admin:3003/api/admin
+  REACT_APP_CHAT_API_URL: http://chat:3004/api/chat
+  REACT_APP_CHAT_SOCKET_URL: http://chat:3004
