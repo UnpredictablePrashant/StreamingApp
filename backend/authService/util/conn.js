@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const URL = process.env.MONGO_URI || 'mongodb://localhost:27017/streamingapp';
+    const URL = process.env.MONGO_URI || 'mongodb://host.docker.internal:27017/streamingapp';
     console.log('Connecting to MongoDB at:', URL);
     
     await mongoose.connect(URL, {
