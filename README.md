@@ -1,138 +1,101 @@
-# StreamingApp
+# Project on Orchestration and Scaling
+# COMPLETE EXECUTION ROADMAP
+# User → Frontend (React)
+      ↓
+# Backend (Node.js API)
+      ↓
+# MongoDB
 
-Stream premium video content, host live watch parties, and manage your catalogue with a modern microservice architecture. The platform now ships with a production-ready admin portal, real-time chat, S3-backed adaptive streaming, and a redesigned cinematic frontend experience.
+# All running in Kubernetes (EKS)
+# Images stored in ECR
+# Built via Jenkins
 
-## Architecture
+# STEP 1: Git Setup (Forked & Synced)
+ https://github.com/UnpredictablePrashant/StreamingApp
+# Then Cloned my fork:
+git clone https://github.com/fancy1505/StreamingApp.git
+cd StreamingApp
+# 	Added upstream (VERY IMPORTANT for syncing):
+git remote add upstream https://github.com/UnpredictablePrashant/StreamingApp.git
+# 	Sync when needed:
+	git pull upstream main
 
-| Service | Port | Description |
-| --- | --- | --- |
-| `authService` | 3001 | User authentication, registration, JWT issuance |
-| `streamingService` | 3002 | Video catalogue, S3 playback endpoints, public APIs |
-| `adminService` | 3003 | Dedicated admin microservice for asset management and uploads |
-| `chatService` | 3004 | Websocket + REST chat for live watch parties |
-| `frontend` | 3000 | React SPA with revamped UI and integrated chat |
-| `mongo` | 27017 | Shared MongoDB instance |
+# STEP 2: Containerize MERN App
+ First created Backend Dockerfile
+ <img width="940" height="729" alt="image" src="https://github.com/user-attachments/assets/8123991c-a1b4-44e5-857f-c26525c8a31c" />
+ <img width="940" height="588" alt="image" src="https://github.com/user-attachments/assets/4157b5db-2ed7-4a28-9b1c-4d5e98814615" />
+ <img width="940" height="654" alt="image" src="https://github.com/user-attachments/assets/530a0560-ec0f-48ef-bfdd-5b005c0ad143" />
+ <img width="940" height="437" alt="image" src="https://github.com/user-attachments/assets/0101fbc5-09b3-4dd2-abeb-ce7cce9fc5c2" />
+# There was a issue connecting mongodb and network so resolved the issue while changing the mongo URI
+<img width="940" height="456" alt="image" src="https://github.com/user-attachments/assets/b89209cc-e1e2-4131-819b-a67a358bf71f" />
+<img width="940" height="443" alt="image" src="https://github.com/user-attachments/assets/0654a295-e270-41a7-93a5-9411dde034c7" />
+# Now we have created Frontend Docker file
+<img width="940" height="622" alt="image" src="https://github.com/user-attachments/assets/4d9f84b9-6d25-40d2-955f-4012cd3a859e" />
+<img width="940" height="172" alt="image" src="https://github.com/user-attachments/assets/1c5ff07c-676f-40f7-9daf-a8df6f8eeefc" />
 
-All backend services share common database models and utilities through `backend/common`.
+# EXPECTED OUTPUT from frontent
+<img width="940" height="571" alt="image" src="https://github.com/user-attachments/assets/a85b64ea-eadd-48b9-a07f-d856c89c321b" />
 
-## Environment Configuration
+# Till now we have completed 
+# Backend Docker ✅
+# MongoDB connection ✅
+# Docker networking ✅
+# Frontend Docker ✅
+# Full MERN app running locally ✅
 
-Create an `.env` for each service (or export variables before running). All services accept the standard AWS credentials for S3 access.
+# Step 3: AWS ECR configuration
+# 1.Created ECR repos
+# 2: Login Docker to AWS
+# 3: Pushed images
+So to proceed with ECR  first I have created IAM user and assigned security credential to login via Aws CLI
+<img width="940" height="259" alt="image" src="https://github.com/user-attachments/assets/137b881d-eed4-48fb-a0f7-167438919e25" />
+# Created ECR Repositories
+We’ll create 2 repos (as per assignment)
+Frontent
+Backend
+<img width="940" height="236" alt="image" src="https://github.com/user-attachments/assets/6ea31e50-9086-436e-a46f-a383d74a554c" />
+<img width="940" height="264" alt="image" src="https://github.com/user-attachments/assets/0cda2fff-5234-40d0-9c73-448eebbfe52e" />
+# NEXT STEP: LOGIN DOCKER TO Amazon Web Services
+<img width="940" height="200" alt="image" src="https://github.com/user-attachments/assets/d03e7242-f29b-4972-b5e8-49cd1d746386" />
+<img width="940" height="234" alt="image" src="https://github.com/user-attachments/assets/41e67361-8dec-41c0-8188-adc55bc8a775" />
 
-### Auth Service (`backend/authService/.env`)
-```ini
-PORT=3001
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=ap-south-1
-AWS_S3_BUCKET=
-```
+# STEP: TAGGING MY IMAGES
+ Tagging = renaming image for ECR
+# TAG BACKEND
+<img width="940" height="299" alt="image" src="https://github.com/user-attachments/assets/9a4cafb5-2923-415e-b8c1-2e9206a6521d" />
 
-### Streaming Service (`backend/streamingService/.env`)
-```ini
-PORT=3002
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=ap-south-1
-AWS_S3_BUCKET=
-AWS_CDN_URL=
-STREAMING_PUBLIC_URL=http://localhost:3002
-```
+# TAG FRONTEND
+<img width="940" height="129" alt="image" src="https://github.com/user-attachments/assets/91c2b427-93da-4b8b-93c2-9b432830ee1c" />
 
-### Admin Service (`backend/adminService/.env`)
-```ini
-PORT=3003
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=ap-south-1
-AWS_S3_BUCKET=
-```
+# STEP 2: PUSH IMAGES TO ECR
+ # PUSH BACKEND
+ <img width="940" height="442" alt="image" src="https://github.com/user-attachments/assets/811fc58c-1fb5-4c80-9c18-db03f9f412b2" />
+ # PUSH FRONTEND
+<img width="940" height="400" alt="image" src="https://github.com/user-attachments/assets/15e6cb99-bbc0-43e0-b7a3-2deaad40c674" />
+# Verifying in AWS CONSOLE
+# Checking ECR → Repositories
+Click:
+•	streaming-backend 
+•	streaming-frontend
 
-### Chat Service (`backend/chatService/.env`)
-```ini
-PORT=3004
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-```
+<img width="940" height="267" alt="image" src="https://github.com/user-attachments/assets/bc0d96da-535d-4c33-b24d-a02ccdbb68b6" />
+<img width="940" height="357" alt="image" src="https://github.com/user-attachments/assets/63c9d13f-c06a-45f9-b362-2002cfb49428" />
+<img width="940" height="361" alt="image" src="https://github.com/user-attachments/assets/d6427a05-d7f6-4a33-97e9-b2188ccc11e3" />
 
-### Frontend build variables (`frontend/.env` or Docker build args)
-```ini
-REACT_APP_AUTH_API_URL=http://localhost:3001/api
-REACT_APP_STREAMING_API_URL=http://localhost:3002/api
-REACT_APP_STREAMING_PUBLIC_URL=http://localhost:3002
-REACT_APP_ADMIN_API_URL=http://localhost:3003/api/admin
-REACT_APP_CHAT_API_URL=http://localhost:3004/api/chat
-REACT_APP_CHAT_SOCKET_URL=http://localhost:3004
-```
 
-## Running with Docker Compose
 
-1. Populate the environment variables above (or rely on the defaults baked into `docker-compose.yml`).
-2. Build and start the stack:
-   ```bash
-   docker-compose up --build
-   ```
-3. Navigate to `http://localhost:3000` for the web app.
 
-The compose file provisions MongoDB plus all four Node.js microservices. S3 credentials are optional for local testing—you can still browse seeded metadata, but streaming requires valid S3 objects.
 
-## Local Development
 
-Install dependencies for each service:
 
-```bash
-# auth service
-cd backend/authService && npm install
 
-# streaming service
-cd ../streamingService && npm install
 
-# admin service
-cd ../adminService && npm install
 
-# chat service
-cd ../chatService && npm install
 
-# frontend
-cd ../../frontend && npm install
-```
 
-Run the services (in separate terminals) after starting MongoDB:
 
-```bash
-cd backend/authService && npm run dev
-cd backend/streamingService && npm run dev
-cd backend/adminService && npm run dev
-cd backend/chatService && npm run dev
-cd frontend && npm start
-```
 
-## Feature Highlights
 
-- **S3-backed adaptive streaming** with secure signed uploads for admins.
-- **Dedicated admin microservice** for video ingestion, metadata management, and featured curation.
-- **Real-time chat** overlay in the player (Socket.IO + persistent message history).
-- **Modern React experience** featuring cinematic hero sections, dynamic carousels, and responsive design.
-- **Role-aware access control** across frontend routes and backend microservices.
 
-## Testing
 
-Automated tests are not yet included. Recommended smoke checks:
 
-1. Register and log in through the web UI.
-2. Upload a small video + thumbnail via the admin dashboard (requires valid S3 credentials).
-3. Confirm playback from the browse page and verify that chat messages broadcast between multiple browser tabs.
-
-## License
-
-MIT © StreamFlix Team
