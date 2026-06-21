@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat
+  template:
+    metadata:
+      labels:
+        app: chat
+    spec:
+      containers:
+      - name: chat
+        image: 640928554403.dkr.ecr.us-east-1.amazonaws.com/streamingapp-chat:v2
+        ports:
+        - containerPort: 3004
+        env:
+        - name: PORT
+          value: "3004"
+        - name: MONGO_URI
+          value: {{ .Values.mongoUri | quote }}
+        - name: JWT_SECRET
+          value: {{ .Values.jwtSecret | quote }}
+        - name: CLIENT_URLS
+          value: {{ .Values.clientUrl | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat
+spec:
+  type: ClusterIP
+  selector:
+    app: chat
+  ports:
+  - port: 3004
+    targetPort: 3004

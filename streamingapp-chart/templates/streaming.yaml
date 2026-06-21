@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streaming
+  template:
+    metadata:
+      labels:
+        app: streaming
+    spec:
+      containers:
+      - name: streaming
+        image: 640928554403.dkr.ecr.us-east-1.amazonaws.com/streamingapp-streaming:v2
+        ports:
+        - containerPort: 3002
+        env:
+        - name: PORT
+          value: "3002"
+        - name: MONGO_URI
+          value: {{ .Values.mongoUri | quote }}
+        - name: JWT_SECRET
+          value: {{ .Values.jwtSecret | quote }}
+        - name: CLIENT_URLS
+          value: {{ .Values.clientUrl | quote }}
+        - name: AWS_REGION
+          value: "ap-south-1"
+        - name: AWS_S3_BUCKET
+          value: "streamingapp-bucket-640928554403"
+        - name: STREAMING_PUBLIC_URL
+          value: {{ .Values.clientUrl | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming
+spec:
+  type: ClusterIP
+  selector:
+    app: streaming
+  ports:
+  - port: 3002
+    targetPort: 3002

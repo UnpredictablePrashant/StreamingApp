@@ -1,0 +1,20 @@
+replicaCount: 1
+jwtSecret: "mysecretkey123"
+clientUrl: "http://a2a67053da4f04a9eb9dac77ad7e09fd-2063731993.us-east-1.elb.amazonaws.com"
+mongoUri: "mongodb+srv://stream@streamingapp.1jjw3rq.mongodb.net/streamingapp?retryWrites=true&w=majority"
+images:
+  frontend:
+    repository: 640928554403.dkr.ecr.us-east-1.amazonaws.com/streamingapp-frontend
+    tag: "8"
+  auth:
+    repository: 640928554403.dkr.ecr.us-east-1.amazonaws.com/streamingapp-auth
+    tag: "8"
+  streaming:
+    repository: 640928554403.dkr.ecr.us-east-1.amazonaws.com/streamingapp-streaming
+    tag: "8"
+  admin:
+    repository: 640928554403.dkr.ecr.us-east-1.amazonaws.com/streamingapp-admin
+    tag: "8"
+  chat:
+    repository: 640928554403.dkr.ecr.us-east-1.amazonaws.com/streamingapp-chat
+    tag: "8"
