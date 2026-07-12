@@ -1,138 +1,318 @@
-# StreamingApp
+# StreamingApp – MERN Application Deployment on AWS using Jenkins, Docker, Amazon ECR, Amazon EKS, Helm & CloudWatch
 
-Stream premium video content, host live watch parties, and manage your catalogue with a modern microservice architecture. The platform now ships with a production-ready admin portal, real-time chat, S3-backed adaptive streaming, and a redesigned cinematic frontend experience.
+## Project Overview
 
-## Architecture
+This project demonstrates the deployment of a containerized MERN (MongoDB, Express.js, React.js, Node.js) Streaming Application on AWS using modern DevOps practices.
 
-| Service | Port | Description |
-| --- | --- | --- |
-| `authService` | 3001 | User authentication, registration, JWT issuance |
-| `streamingService` | 3002 | Video catalogue, S3 playback endpoints, public APIs |
-| `adminService` | 3003 | Dedicated admin microservice for asset management and uploads |
-| `chatService` | 3004 | Websocket + REST chat for live watch parties |
-| `frontend` | 3000 | React SPA with revamped UI and integrated chat |
-| `mongo` | 27017 | Shared MongoDB instance |
+The application consists of multiple microservices that are containerized using Docker, stored in Amazon Elastic Container Registry (ECR), deployed to Amazon Elastic Kubernetes Service (EKS) using Helm, and monitored using Amazon CloudWatch.
 
-All backend services share common database models and utilities through `backend/common`.
+---
 
-## Environment Configuration
+## Project Objectives
 
-Create an `.env` for each service (or export variables before running). All services accept the standard AWS credentials for S3 access.
+* Containerize the MERN application using Docker.
+* Implement Continuous Integration (CI) using Jenkins.
+* Store Docker images in Amazon Elastic Container Registry (ECR).
+* Deploy the application on Amazon Elastic Kubernetes Service (EKS).
+* Manage Kubernetes deployments using Helm.
+* Monitor workloads using Amazon CloudWatch.
+* Demonstrate orchestration and scaling concepts using Kubernetes.
 
-### Auth Service (`backend/authService/.env`)
-```ini
-PORT=3001
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=ap-south-1
-AWS_S3_BUCKET=
+---
+
+## Technology Stack
+
+| Technology        | Purpose                    |
+| ----------------- | -------------------------- |
+| React.js          | Frontend                   |
+| Node.js           | Backend Services           |
+| Express.js        | REST APIs                  |
+| MongoDB           | Database                   |
+| Docker            | Containerization           |
+| Jenkins           | Continuous Integration     |
+| Amazon EC2        | Jenkins Server             |
+| Amazon ECR        | Docker Image Registry      |
+| Amazon EKS        | Kubernetes Cluster         |
+| Helm              | Kubernetes Package Manager |
+| Amazon CloudWatch | Monitoring & Logging       |
+| Git & GitHub      | Version Control            |
+
+---
+
+## Project Structure
+
+```text
+StreamingApp
+│
+├── backend
+│   ├── authService
+│   ├── streamingService
+│   ├── adminService
+│   └── chatService
+│
+├── frontend
+│
+├── helm
+│   └── streamingapp
+│
+├── docker-compose.yml
+├── Jenkinsfile
+└── README.md
 ```
 
-### Streaming Service (`backend/streamingService/.env`)
-```ini
-PORT=3002
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=ap-south-1
-AWS_S3_BUCKET=
-AWS_CDN_URL=
-STREAMING_PUBLIC_URL=http://localhost:3002
+---
+
+## Application Architecture
+
+```text
+                GitHub Repository
+                       │
+                       ▼
+                 Jenkins Pipeline
+                       │
+                       ▼
+                Docker Image Build
+                       │
+                       ▼
+               Amazon Elastic Container Registry
+                       │
+                       ▼
+                Amazon EKS Cluster
+                       │
+                Kubernetes Pods
+                       │
+                       ▼
+                  MERN Application
+                       │
+                       ▼
+             Amazon CloudWatch Monitoring
 ```
 
-### Admin Service (`backend/adminService/.env`)
-```ini
-PORT=3003
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=ap-south-1
-AWS_S3_BUCKET=
-```
+---
 
-### Chat Service (`backend/chatService/.env`)
-```ini
-PORT=3004
-MONGO_URI=mongodb://localhost:27017/streamingapp
-JWT_SECRET=changeme
-CLIENT_URLS=http://localhost:3000
-```
+## Docker Containerization
 
-### Frontend build variables (`frontend/.env` or Docker build args)
-```ini
-REACT_APP_AUTH_API_URL=http://localhost:3001/api
-REACT_APP_STREAMING_API_URL=http://localhost:3002/api
-REACT_APP_STREAMING_PUBLIC_URL=http://localhost:3002
-REACT_APP_ADMIN_API_URL=http://localhost:3003/api/admin
-REACT_APP_CHAT_API_URL=http://localhost:3004/api/chat
-REACT_APP_CHAT_SOCKET_URL=http://localhost:3004
-```
+Dockerfiles were created for:
 
-## Running with Docker Compose
+* Frontend
+* Authentication Service
+* Streaming Service
+* Admin Service
+* Chat Service
 
-1. Populate the environment variables above (or rely on the defaults baked into `docker-compose.yml`).
-2. Build and start the stack:
-   ```bash
-   docker-compose up --build
-   ```
-3. Navigate to `http://localhost:3000` for the web app.
+Each component was built as an independent Docker image.
 
-The compose file provisions MongoDB plus all four Node.js microservices. S3 credentials are optional for local testing—you can still browse seeded metadata, but streaming requires valid S3 objects.
-
-## Local Development
-
-Install dependencies for each service:
+Example:
 
 ```bash
-# auth service
-cd backend/authService && npm install
-
-# streaming service
-cd ../streamingService && npm install
-
-# admin service
-cd ../adminService && npm install
-
-# chat service
-cd ../chatService && npm install
-
-# frontend
-cd ../../frontend && npm install
+docker build -t streaming-frontend ./frontend
+docker build -t streaming-auth ./backend/authService
 ```
 
-Run the services (in separate terminals) after starting MongoDB:
+---
+
+## Amazon Elastic Container Registry (ECR)
+
+Separate repositories were created for each service.
+
+Repositories:
+
+* streaming-frontend
+* streaming-auth
+* streaming-service
+* streaming-admin
+* streaming-chat
+
+Images were tagged and pushed to Amazon ECR.
+
+Example:
 
 ```bash
-cd backend/authService && npm run dev
-cd backend/streamingService && npm run dev
-cd backend/adminService && npm run dev
-cd backend/chatService && npm run dev
-cd frontend && npm start
+docker tag streaming-frontend:latest <account-id>.dkr.ecr.ap-south-1.amazonaws.com/streaming-frontend:latest
+
+docker push <account-id>.dkr.ecr.ap-south-1.amazonaws.com/streaming-frontend:latest
 ```
 
-## Feature Highlights
+---
 
-- **S3-backed adaptive streaming** with secure signed uploads for admins.
-- **Dedicated admin microservice** for video ingestion, metadata management, and featured curation.
-- **Real-time chat** overlay in the player (Socket.IO + persistent message history).
-- **Modern React experience** featuring cinematic hero sections, dynamic carousels, and responsive design.
-- **Role-aware access control** across frontend routes and backend microservices.
+## Jenkins Continuous Integration
 
-## Testing
+A Jenkins server was deployed on an Amazon EC2 instance.
 
-Automated tests are not yet included. Recommended smoke checks:
+The Jenkins pipeline performs:
 
-1. Register and log in through the web UI.
-2. Upload a small video + thumbnail via the admin dashboard (requires valid S3 credentials).
-3. Confirm playback from the browse page and verify that chat messages broadcast between multiple browser tabs.
+1. Source code checkout
+2. Docker image build
+3. Docker image tagging
+4. Authentication with Amazon ECR
+5. Push images to Amazon ECR
 
-## License
+GitHub Webhooks can be configured to trigger builds automatically on code commits.
 
-MIT © StreamFlix Team
+---
+
+## Amazon EKS Deployment
+
+An Amazon EKS cluster was created to orchestrate the application containers.
+
+The cluster consists of managed worker nodes that run Kubernetes workloads.
+
+Verification commands:
+
+```bash
+kubectl get nodes
+kubectl get pods
+kubectl get services
+```
+
+---
+
+## Helm Deployment
+
+Helm was used to package and deploy Kubernetes resources.
+
+Installation command:
+
+```bash
+helm install streamingapp ./helm/streamingapp
+```
+
+Verify deployment:
+
+```bash
+helm list
+kubectl get all
+```
+
+---
+
+## Monitoring using Amazon CloudWatch
+
+Amazon CloudWatch Observability Add-on was installed on the EKS cluster.
+
+Features:
+
+* Container Monitoring
+* Kubernetes Metrics
+* Pod Monitoring
+* Cluster Monitoring
+* Centralized Logging using Fluent Bit
+
+Verification:
+
+```bash
+kubectl get pods -n amazon-cloudwatch
+```
+
+---
+
+## CI/CD Workflow
+
+```text
+Developer
+     │
+     ▼
+GitHub Repository
+     │
+     ▼
+Jenkins Pipeline
+     │
+     ▼
+Docker Image Build
+     │
+     ▼
+Amazon ECR
+     │
+     ▼
+Amazon EKS
+     │
+     ▼
+Helm Deployment
+     │
+     ▼
+CloudWatch Monitoring
+```
+
+---
+
+## Deployment Steps
+
+1. Fork the project repository.
+2. Build Docker images.
+3. Push images to Amazon ECR.
+4. Configure Jenkins Pipeline.
+5. Create Amazon EKS Cluster.
+6. Configure kubectl.
+7. Install Helm.
+8. Deploy the application using Helm.
+9. Enable Amazon CloudWatch Observability.
+10. Verify application deployment.
+
+---
+
+## Validation Commands
+
+```bash
+docker images
+
+aws ecr describe-repositories
+
+aws eks list-clusters
+
+kubectl get nodes
+
+kubectl get pods -A
+
+kubectl get svc
+
+helm list
+```
+
+---
+
+## Screenshots
+
+The repository includes screenshots demonstrating:
+
+* GitHub Repository
+* Docker Image Build
+* Jenkins Pipeline
+* Amazon ECR Repositories
+* Amazon EC2 Instance
+* Amazon EKS Cluster
+* Kubernetes Pods
+* Helm Deployment
+* Amazon CloudWatch Observability
+
+---
+
+## Learning Outcomes
+
+This project demonstrates practical implementation of:
+
+* Git Version Control
+* Docker Containerization
+* CI using Jenkins
+* Image Management using Amazon ECR
+* Kubernetes Orchestration
+* Helm Package Management
+* Cloud Monitoring using Amazon CloudWatch
+* AWS Infrastructure Deployment
+
+---
+
+## Future Enhancements
+
+* Horizontal Pod Autoscaler (HPA)
+* Kubernetes Ingress Controller
+* SSL/TLS using AWS Certificate Manager
+* Blue-Green Deployment
+* GitOps using ArgoCD
+* Prometheus & Grafana Monitoring
+* Automated CD Pipeline
+
+---
+
+## Conclusion
+
+This project successfully demonstrates the end-to-end deployment of a containerized MERN application using modern DevOps practices. The solution integrates Docker, Jenkins, Amazon ECR, Amazon EKS, Helm, and Amazon CloudWatch to provide a scalable, maintainable, and cloud-native deployment workflow suitable for production-oriented environments.
