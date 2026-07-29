@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: streaming-app-config
+  namespace: {{ .Values.namespace.name }}
+
+data:
+  AUTH_PORT: {{ .Values.configMap.AUTH_PORT | quote }}
+  STREAMING_PORT: {{ .Values.configMap.STREAMING_PORT | quote }}
+  ADMIN_PORT: {{ .Values.configMap.ADMIN_PORT | quote }}
+  CHAT_PORT: {{ .Values.configMap.CHAT_PORT | quote }}
+  MONGO_URI: {{ .Values.configMap.MONGO_URI | quote }}
+  CLIENT_URLS: {{ .Values.configMap.CLIENT_URLS | quote }}
+  AWS_REGION: {{ .Values.configMap.AWS_REGION | quote }}
+  AWS_S3_BUCKET: {{ .Values.configMap.AWS_S3_BUCKET | quote }}
+  AWS_CDN_URL: {{ .Values.configMap.AWS_CDN_URL | quote }}

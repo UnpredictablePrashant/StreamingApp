@@ -1,0 +1,61 @@
+backendrepositoryName: "975050024946.dkr.ecr.us-east-1.amazonaws.com/dev-streaming-app-backend"
+frontendrepositoryName: "975050024946.dkr.ecr.us-east-1.amazonaws.com/dev-streaming-app-frontend"
+
+namespace:
+  name: streaming-app
+
+frontend:
+  replicaCount: 2
+  image:
+    tag: frontend-v31
+
+backend:
+  admin:
+    name: admin
+    tag: admin-v31
+    port: 3003
+    replicaCount: 2
+
+  auth:
+    name: auth
+    tag: auth-v31
+    port: 3001
+    replicaCount: 2
+
+  chat:
+    name: chat
+    tag: chat-v31
+    port: 3004
+    replicaCount: 2
+
+  streaming:
+    name: streaming
+    tag: streaming-v31
+    port: 3002
+    replicaCount: 2
+
+configMap:
+  AUTH_PORT: "3001"
+  STREAMING_PORT: "3002"
+  ADMIN_PORT: "3003"
+  CHAT_PORT: "3004"
+  MONGO_URI: "mongodb+srv://devendra8182_db_user:h7bjVagR8ru8DFdo@devendra.io1nvag.mongodb.net/streamingapp"
+  CLIENT_URLS: "http://abb778b4f1b074e96b0e11d90161e712-973608811.us-east-2.elb.amazonaws.com,http://localhost:3000"
+  AWS_REGION: "us-east-2"
+  AWS_S3_BUCKET: "devendra-streamingapp"
+  AWS_CDN_URL: "d30iatvbnvx8m.cloudfront.net"
+
+ingress:
+  className: "nginx"
+  host: "abb778b4f1b074e96b0e11d90161e712-973608811.us-east-2.elb.amazonaws.com"
+
+replicaCount: 2
+databaseReplicaCount: 1
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "250m"
+    memory: "256Mi"

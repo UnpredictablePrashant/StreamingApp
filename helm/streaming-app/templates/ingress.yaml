@@ -1,0 +1,63 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: streamingapp-ingress
+  namespace: {{ .Values.namespace.name }}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /api/streaming
+            pathType: Prefix
+            backend:
+              service:
+                name: streaming-service
+                port:
+                  number: 3002
+          - path: /api/admin
+            pathType: Prefix
+            backend:
+              service:
+                name: admin-service-service
+                port:
+                  number: 3003
+          - path: /api/chat
+            pathType: Prefix
+            backend:
+              service:
+                name: chat-service
+                port:
+                  number: 3004
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: streamingapp-auth-ingress
+  namespace: {{ .Values.namespace.name }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /api/$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /api/auth(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: auth-service-service
+                port:
+                  number: 3001

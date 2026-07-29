@@ -11,7 +11,8 @@ services:
 
   auth:
     build:
-      context: ./backend/authService
+      context: ./backend
+      dockerfile: authService/Dockerfile
     depends_on:
       - mongo
     environment:

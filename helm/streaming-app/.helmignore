@@ -1,0 +1,26 @@
+# Create .helmignore in your chart directory
+cat > StreamingApp/.helmignore << 'EOF'
+# Git
+.git/
+.gitignore
+
+# Node
+node_modules/
+npm-debug.log
+
+# Backend/Frontend source code
+backend/
+frontend/
+
+# Docker
+.docker/
+docker-compose.yml
+*.dockerfile
+
+# Misc
+*.md
+*.log
+*.tmp
+.env
+.DS_Store
+EOF

@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service-deployment
+  namespace: {{ .Values.namespace.name }}
+spec:
+  replicas: {{ .Values.backend.auth.replicaCount }}
+  selector:
+    matchLabels:
+      component: auth-service
+  template:
+    metadata:
+      labels:
+        component: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: "{{ .Values.backendrepositoryName }}:{{ .Values.backend.auth.tag }}"
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: streaming-app-config
+          env:
+            - name: CLIENT_URLS
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: CLIENT_URLS
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: AUTH_PORT
+            - name: MONGO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: MONGO_URI
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: streamingapp-secrets
+                  key: JWT_SECRET
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: streamingapp-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: streamingapp-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: AWS_REGION
+            - name: AWS_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: AWS_S3_BUCKET
+          startupProbe:
+            tcpSocket:
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 6
+            timeoutSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 3001
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: 3001
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+              memory: {{ .Values.resources.limits.memory | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service-service
+  namespace: {{ .Values.namespace.name }}
+spec:
+  type: ClusterIP
+  selector:
+    component: auth-service
+  ports:
+    - port: 3001
+      targetPort: 3001
+    

@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: {{ .Values.namespace.name }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      component: frontend
+  template:
+    metadata:
+      labels:
+        component: frontend
+    spec:
+      initContainers:
+        - name: patch-react-bundle
+          image: "{{ .Values.frontendrepositoryName }}:{{ .Values.frontend.image.tag }}"
+          command: ["sh", "-c"]
+          args:
+            - |
+              cp -a /usr/share/nginx/html/* /patched-html/
+              for JS_FILE in /patched-html/static/js/main.*.js; do
+                if [ -f "$JS_FILE" ]; then
+                  sed -i 's|http://localhost:3001/api|/api/auth|g' "$JS_FILE"
+                  sed -i 's|http://localhost:3002/api|/api|g' "$JS_FILE"
+                  sed -i 's|http://localhost:3002||g' "$JS_FILE"
+                  sed -i 's|http://localhost:3003/api/admin|/api/admin|g' "$JS_FILE"
+                  sed -i 's|http://localhost:3004/api/chat|/api/chat|g' "$JS_FILE"
+                  sed -i 's|http://localhost:3004||g' "$JS_FILE"
+                fi
+              done
+          volumeMounts:
+            - name: static-html
+              mountPath: /patched-html
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontendrepositoryName }}:{{ .Values.frontend.image.tag }}"
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: streaming-app-config
+            - secretRef:
+                name: streamingapp-secrets
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+            - name: static-html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+              memory: {{ .Values.resources.limits.memory | quote }}
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: frontend-nginx-config
+        - name: static-html
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: {{ .Values.namespace.name }}
+spec:
+  type: NodePort
+  selector:
+    component: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-nginx-config
+  namespace: {{ .Values.namespace.name }}
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+        
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }

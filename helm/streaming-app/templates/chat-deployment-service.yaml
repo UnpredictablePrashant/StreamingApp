@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-service-deployment
+  namespace: {{ .Values.namespace.name }}
+spec:
+  replicas: {{ .Values.backend.chat.replicaCount }}
+  selector:
+    matchLabels:
+      component: chat-service
+  template:
+    metadata:
+      labels:
+        component: chat-service
+    spec:
+      containers:
+        - name: chat-service
+          image: "{{ .Values.backendrepositoryName }}:{{ .Values.backend.chat.tag }}"
+          ports:
+            - containerPort: 3004
+          envFrom:
+            - configMapRef:
+                name: streaming-app-config
+          env:
+             - name: PORT
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: CHAT_PORT
+             - name: MONGO_URI
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: MONGO_URI
+             - name: JWT_SECRET
+               valueFrom:
+                 secretKeyRef:
+                   name: streamingapp-secrets
+                   key: JWT_SECRET
+             - name: CLIENT_URLS
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: CLIENT_URLS
+             - name: AWS_ACCESS_KEY_ID
+               valueFrom:
+                 secretKeyRef:
+                   name: streamingapp-secrets
+                   key: AWS_ACCESS_KEY_ID
+             - name: AWS_SECRET_ACCESS_KEY
+               valueFrom:
+                 secretKeyRef:
+                   name: streamingapp-secrets
+                   key: AWS_SECRET_ACCESS_KEY
+             - name: AWS_REGION
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: AWS_REGION
+             - name: AWS_S3_BUCKET
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: AWS_S3_BUCKET
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+              memory: {{ .Values.resources.limits.memory | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-service
+  namespace: {{ .Values.namespace.name }}
+spec:
+  type: ClusterIP
+  selector:
+    component: chat-service
+  ports:
+    - port: 3004
+      targetPort: 3004

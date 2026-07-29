@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-service-deployment
+  namespace: {{ .Values.namespace.name }}
+spec:
+  replicas: {{ .Values.backend.streaming.replicaCount }}
+  selector:
+    matchLabels:
+      component: streaming-service
+  template:
+    metadata:
+      labels:
+        component: streaming-service
+    spec:
+      containers:
+        - name: streaming-service
+          image: "{{ .Values.backendrepositoryName }}:{{ .Values.backend.streaming.tag }}"
+          ports:
+            - containerPort: 3002
+          envFrom:
+            - configMapRef:
+                name: streaming-app-config
+          env:
+             - name: PORT
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: STREAMING_PORT
+             - name: MONGO_URI
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: MONGO_URI
+             - name: JWT_SECRET
+               valueFrom:
+                 secretKeyRef:
+                   name: streamingapp-secrets
+                   key: JWT_SECRET
+             - name: CLIENT_URLS
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: CLIENT_URLS
+             - name: AWS_ACCESS_KEY_ID
+               valueFrom:
+                 secretKeyRef:
+                   name: streamingapp-secrets
+                   key: AWS_ACCESS_KEY_ID
+             - name: AWS_SECRET_ACCESS_KEY
+               valueFrom:
+                 secretKeyRef:
+                   name: streamingapp-secrets
+                   key: AWS_SECRET_ACCESS_KEY
+             - name: AWS_REGION
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: AWS_REGION
+             - name: AWS_S3_BUCKET
+               valueFrom:
+                 configMapKeyRef:
+                   name: streaming-app-config
+                   key: AWS_S3_BUCKET
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3002
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3002
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+              memory: {{ .Values.resources.limits.memory | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming-service
+  namespace: {{ .Values.namespace.name }}
+spec:
+  type: ClusterIP
+  selector:
+    component: streaming-service
+  ports:
+    - port: 3002
+      targetPort: 3002
