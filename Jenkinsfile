@@ -18,8 +18,8 @@ pipeline {
             steps {
                 withAWS(credentials: 'hero-hitesh-aws', region: 'us-east-1') {
                     sh """
-                    aws ecr get-login-password --region us-east-1 \
-                    | docker login --username AWS --password-stdin 934822760684.dkr.ecr.us-east-1.amazonaws.com
+                    aws ecr get-login-password --region $AWS_REGION \
+                    | docker login --username AWS --password-stdin $ECR_REGISTRY
                     """
                 }
             }
@@ -38,12 +38,17 @@ pipeline {
         stage('Build & Push Backend Services') {
             steps {
                 script {
-                    def services = ['authService', 'chatService', 'adminService', 'streamingService']
+                    def services = [
+                        ['name': 'auth-service', 'path': 'backend/authService'],
+                        ['name': 'chat-service', 'path': 'backend/chatService'],
+                        ['name': 'admin-service', 'path': 'backend/adminService'],
+                        ['name': 'streaming-service', 'path': 'backend/streamingService']
+                    ]
                     for (svc in services) {
                         sh """
-                        docker build -t $svc ./backend/$svc
-                        docker tag $svc:latest $ECR_REGISTRY/$svc:latest
-                        docker push $svc:latest $ECR_REGISTRY/$svc:latest
+                        docker build -t ${svc.name} ./${svc.path}
+                        docker tag ${svc.name}:latest $ECR_REGISTRY/${svc.name}:latest
+                        docker push $ECR_REGISTRY/${svc.name}:latest
                         """
                     }
                 }
