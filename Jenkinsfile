@@ -16,7 +16,7 @@ pipeline {
 
         stage('Login to ECR') {
             steps {
-                withAWS(credentials: 'hero-hitesh-aws', region: 'us-east-1') {
+                withAWS(credentials: 'hero-hitesh-aws', region: "${AWS_REGION}") {
                     sh """
                     aws ecr get-login-password --region $AWS_REGION \
                     | docker login --username AWS --password-stdin $ECR_REGISTRY
@@ -25,34 +25,54 @@ pipeline {
             }
         }
 
-        stage('Build & Push Frontend') {
-            steps {
-                sh """
-                docker build -t frontend ./frontend
-                docker tag frontend:latest $ECR_REGISTRY/frontend:latest
-                docker push $ECR_REGISTRY/frontend:latest
-                """
-            }
-        }
-
-        stage('Build & Push Backend Services') {
-            steps {
-                script {
-                    def services = [
-                        ['name': 'auth-service', 'path': 'backend/authService'],
-                        ['name': 'chat-service', 'path': 'backend/chatService'],
-                        ['name': 'admin-service', 'path': 'backend/adminService'],
-                        ['name': 'streaming-service', 'path': 'backend/streamingService']
-                    ]
-                    for (svc in services) {
+        stage('Build & Push Services') {
+            parallel {
+                stage('Frontend') {
+                    steps {
                         sh """
-                        docker build -t ${svc.name} ./${svc.path}
-                        docker tag ${svc.name}:latest $ECR_REGISTRY/${svc.name}:latest
-                        docker push $ECR_REGISTRY/${svc.name}:latest
+                        docker build -t frontend ./frontend
+                        docker tag frontend:latest $ECR_REGISTRY/frontend:latest
+                        docker push $ECR_REGISTRY/frontend:latest
+                        """
+                    }
+                }
+                stage('Auth Service') {
+                    steps {
+                        sh """
+                        docker build -t auth-service ./backend/authService
+                        docker tag auth-service:latest $ECR_REGISTRY/auth-service:latest
+                        docker push $ECR_REGISTRY/auth-service:latest
+                        """
+                    }
+                }
+                stage('Chat Service') {
+                    steps {
+                        sh """
+                        docker build -t chat-service ./backend/chatService
+                        docker tag chat-service:latest $ECR_REGISTRY/chat-service:latest
+                        docker push $ECR_REGISTRY/chat-service:latest
+                        """
+                    }
+                }
+                stage('Admin Service') {
+                    steps {
+                        sh """
+                        docker build -t admin-service ./backend/adminService
+                        docker tag admin-service:latest $ECR_REGISTRY/admin-service:latest
+                        docker push $ECR_REGISTRY/admin-service:latest
+                        """
+                    }
+                }
+                stage('Streaming Service') {
+                    steps {
+                        sh """
+                        docker build -t streaming-service ./backend/streamingService
+                        docker tag streaming-service:latest $ECR_REGISTRY/streaming-service:latest
+                        docker push $ECR_REGISTRY/streaming-service:latest
                         """
                     }
                 }
             }
         }
-    } // closes stages
-}   // closes pipeline
+    }
+}
