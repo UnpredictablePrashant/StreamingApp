@@ -29,21 +29,25 @@ pipeline {
         stage('Build & Push Frontend') {
             steps {
                 sh """
-                docker build -t streaming-frontend ./frontend
-                docker tag streaming-frontend:latest $ECR_REGISTRY/streaming-frontend:latest
-                docker push $ECR_REGISTRY/streaming-frontend:latest
+                docker build -t frontend ./frontend
+                docker tag frontend:latest $ECR_REGISTRY/frontend:latest
+                docker push $ECR_REGISTRY/frontend:latest
                 """
             }
         }
 
-        stage('Build & Push Backend') {
-            steps {
+        stage('Build & Push Backend Services') {
+    steps {
+        script {
+            def services = ['authService', 'chatService', 'adminService', 'streamingService']
+            for (svc in services) {
                 sh """
-                docker build -t streaming-backend ./backend
-                docker tag streaming-backend:latest $ECR_REGISTRY/streaming-backend:latest
-                docker push $ECR_REGISTRY/streaming-backend:latest
+                docker build -t $svc ./backend/$svc
+                docker tag $svc:latest $ECR_REGISTRY/$svc:latest
+                docker push $ECR_REGISTRY/$svc:latest
                 """
             }
         }
     }
 }
+
