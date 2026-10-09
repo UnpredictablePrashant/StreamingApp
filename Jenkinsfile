@@ -16,7 +16,7 @@ pipeline {
 
         stage('Login to ECR') {
             steps {
-                 withAWS(credentials: 'streamflix-aws-deploy', region: 'us-east-1') {
+                 withAWS(credentials: 'hero-hitesh-aws', region: 'us-east-1') {
             sh """
             aws ecr get-login-password --region us-east-1 \
             | docker login --username AWS --password-stdin 934822760684.dkr.ecr.us-east-1.amazonaws.com
