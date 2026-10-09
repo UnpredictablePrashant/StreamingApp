@@ -26,15 +26,16 @@ pipeline {
             }
         }
 
-        stage('Build & Push Frontend') {
-            steps {
-                sh """
-                docker build -t frontend ./frontend
-                docker tag frontend:latest $ECR_REGISTRY/frontend:latest
-                docker push $ECR_REGISTRY/frontend:latest
-                """
-            }
-        }
+       stage('Build & Push Frontend') {
+    steps {
+        sh """
+        docker build -t frontend ./frontend
+        docker tag frontend:latest $ECR_REGISTRY/frontend:latest
+        docker push $ECR_REGISTRY/frontend:latest
+        """
+    }
+}
+
 
         stage('Build & Push Backend Services') {
     steps {
