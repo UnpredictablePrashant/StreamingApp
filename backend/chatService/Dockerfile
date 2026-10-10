@@ -1,12 +1,10 @@
 FROM node:18-alpine AS base
-
 WORKDIR /app/chatService
 
-COPY chatService/package*.json ./
+COPY package*.json ./
 RUN npm install --production
 
-COPY chatService/. ./
-ENV NODE_ENV=production
-EXPOSE 3004
+COPY . .
+EXPOSE 4001
+CMD ["npm", "start"]
 
-CMD ["npm", "run", "start"]
