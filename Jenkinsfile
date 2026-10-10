@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
+        AWS_REGION     = "us-east-1"
         AWS_ACCOUNT_ID = "934822760684"
-        AWS_REGION = "us-east-1"
-        ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        ECR_REGISTRY   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
     }
 
     stages {
@@ -16,7 +16,7 @@ pipeline {
 
         stage('Login to ECR') {
             steps {
-                script {
+                withAWS(credentials: 'hero-hitesh-aws', region: "${AWS_REGION}") {
                     sh """
                     aws ecr get-login-password --region $AWS_REGION \
                     | docker login --username AWS --password-stdin $ECR_REGISTRY
@@ -25,12 +25,21 @@ pipeline {
             }
         }
 
-        stage('Build & Push Images') {
+        stage('Build & Push Services') {
             parallel {
+                stage('Frontend') {
+                    steps {
+                        sh """
+                        docker build --no-cache -t frontend ./frontend
+                        docker tag frontend:latest $ECR_REGISTRY/frontend:latest
+                        docker push $ECR_REGISTRY/frontend:latest
+                        """
+                    }
+                }
                 stage('Auth Service') {
                     steps {
                         sh """
-                        docker build -t auth-service ./backend/authService
+                        docker build --no-cache -t auth-service ./backend/authService
                         docker tag auth-service:latest $ECR_REGISTRY/auth-service:latest
                         docker push $ECR_REGISTRY/auth-service:latest
                         """
@@ -39,7 +48,7 @@ pipeline {
                 stage('Chat Service') {
                     steps {
                         sh """
-                        docker build -t chat-service ./backend/chatService
+                        docker build --no-cache -t chat-service ./backend/chatService
                         docker tag chat-service:latest $ECR_REGISTRY/chat-service:latest
                         docker push $ECR_REGISTRY/chat-service:latest
                         """
@@ -48,7 +57,7 @@ pipeline {
                 stage('Admin Service') {
                     steps {
                         sh """
-                        docker build -t admin-service ./backend/adminService
+                        docker build --no-cache -t admin-service ./backend/adminService
                         docker tag admin-service:latest $ECR_REGISTRY/admin-service:latest
                         docker push $ECR_REGISTRY/admin-service:latest
                         """
@@ -57,18 +66,9 @@ pipeline {
                 stage('Streaming Service') {
                     steps {
                         sh """
-                        docker build -t streaming-service ./backend/streamingService
+                        docker build --no-cache -t streaming-service ./backend/streamingService
                         docker tag streaming-service:latest $ECR_REGISTRY/streaming-service:latest
                         docker push $ECR_REGISTRY/streaming-service:latest
-                        """
-                    }
-                }
-                stage('Frontend') {
-                    steps {
-                        sh """
-                        docker build -t streaming-frontend ./frontend
-                        docker tag streaming-frontend:latest $ECR_REGISTRY/streaming-frontend:latest
-                        docker push $ECR_REGISTRY/streaming-frontend:latest
                         """
                     }
                 }
@@ -76,4 +76,5 @@ pipeline {
         }
     }
 }
+
 
