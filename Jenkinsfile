@@ -30,7 +30,13 @@ pipeline {
                 stage('Frontend') {
                     steps {
                         sh """
-                        docker build --no-cache -t frontend ./frontend
+                        docker build --no-cache \
+                            --build-arg REACT_APP_AUTH_API_URL=/api \
+                            --build-arg REACT_APP_STREAMING_API_URL=/api \
+                            --build-arg REACT_APP_STREAMING_PUBLIC_URL=/ \
+                            --build-arg REACT_APP_ADMIN_API_URL=/api/admin \
+                            --build-arg REACT_APP_CHAT_API_URL=/api/chat \
+                            -t frontend ./frontend
                         docker tag frontend:latest $ECR_REGISTRY/frontend:latest
                         docker push $ECR_REGISTRY/frontend:latest
                         """
