@@ -1,0 +1,27 @@
+registry: 934822760684.dkr.ecr.us-east-1.amazonaws.com
+
+mongo:
+  image: mongo:6
+  storage: 10Gi
+
+backends:
+  - name: auth
+    image: auth-service
+    port: 3001
+  - name: streaming
+    image: streaming-service
+    port: 3002
+  - name: admin
+    image: admin-service
+    port: 3003
+  - name: chat
+    image: chat-service
+    port: 3004
+
+frontend:
+  image: frontend
+  port: 80
+  replicas: 2
+
+jwtSecret: "replace-with-a-secure-secret"
+awsRegion: us-east-1
